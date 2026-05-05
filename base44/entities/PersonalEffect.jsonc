@@ -1,0 +1,84 @@
+{
+  "name": "PersonalEffect",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "jewelry",
+        "clothing",
+        "documents",
+        "electronics",
+        "currency",
+        "keys",
+        "medical_devices",
+        "other"
+      ]
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "estimated_value": {
+      "type": "string"
+    },
+    "condition": {
+      "type": "string"
+    },
+    "storage_location": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "logged",
+        "secured",
+        "transferred",
+        "released",
+        "disposed"
+      ],
+      "default": "logged"
+    },
+    "logged_by": {
+      "type": "string"
+    },
+    "released_to": {
+      "type": "string"
+    },
+    "release_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "acknowledgment_signed": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "decedent_id",
+    "item_name",
+    "category",
+    "status"
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "name": "Decedent",
+  "type": "object",
+  "properties": {
+    "unique_id": {
+      "type": "string",
+      "description": "Auto-generated unique morgue ID (e.g., MS-2024-001)"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "unknown",
+        "other"
+      ]
+    },
+    "estimated_age": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "storage",
+        "examination",
+        "holding",
+        "released",
+        "transferred"
+      ],
+      "default": "intake"
+    },
+    "identification_status": {
+      "type": "string",
+      "enum": [
+        "identified",
+        "unidentified",
+        "pending_verification"
+      ],
+      "default": "pending_verification"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "hospital",
+        "law_enforcement",
+        "scene",
+        "funeral_home",
+        "other"
+      ]
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_contact": {
+      "type": "string"
+    },
+    "arrival_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "condition_on_arrival": {
+      "type": "string",
+      "enum": [
+        "intact",
+        "decomposed",
+        "traumatic_injuries",
+        "burned",
+        "skeletal",
+        "other"
+      ]
+    },
+    "condition_notes": {
+      "type": "string"
+    },
+    "storage_location_id": {
+      "type": "string"
+    },
+    "storage_location_label": {
+      "type": "string"
+    },
+    "case_number": {
+      "type": "string"
+    },
+    "law_enforcement_case": {
+      "type": "string"
+    },
+    "intake_officer": {
+      "type": "string"
+    },
+    "assigned_pathologist": {
+      "type": "string"
+    },
+    "next_of_kin_name": {
+      "type": "string"
+    },
+    "next_of_kin_contact": {
+      "type": "string"
+    },
+    "next_of_kin_relationship": {
+      "type": "string"
+    },
+    "physical_description": {
+      "type": "string"
+    },
+    "identifying_marks": {
+      "type": "string"
+    },
+    "height_cm": {
+      "type": "number"
+    },
+    "weight_kg": {
+      "type": "number"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "personal_effects_logged": {
+      "type": "boolean",
+      "default": false
+    },
+    "documentation_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "requires_autopsy": {
+      "type": "boolean",
+      "default": false
+    },
+    "cause_of_death": {
+      "type": "string"
+    },
+    "manner_of_death": {
+      "type": "string",
+      "enum": [
+        "natural",
+        "accident",
+        "homicide",
+        "suicide",
+        "undetermined",
+        "pending"
+      ]
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "unique_id",
+    "status",
+    "arrival_datetime",
+    "source_type"
+  ]
+}

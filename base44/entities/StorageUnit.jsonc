@@ -1,0 +1,60 @@
+{
+  "name": "StorageUnit",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "e.g., Room A - Rack 1 - Tray 3"
+    },
+    "room": {
+      "type": "string"
+    },
+    "unit_type": {
+      "type": "string",
+      "enum": [
+        "refrigerated_tray",
+        "freezer_compartment",
+        "room_temperature_shelf",
+        "isolation_unit",
+        "decomp_unit"
+      ]
+    },
+    "capacity": {
+      "type": "number"
+    },
+    "current_occupancy": {
+      "type": "number",
+      "default": 0
+    },
+    "temperature_celsius": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "occupied",
+        "maintenance",
+        "reserved"
+      ],
+      "default": "available"
+    },
+    "current_decedent_id": {
+      "type": "string"
+    },
+    "current_decedent_name": {
+      "type": "string"
+    },
+    "location_code": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "label",
+    "unit_type",
+    "capacity"
+  ]
+}

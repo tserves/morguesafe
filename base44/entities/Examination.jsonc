@@ -1,0 +1,122 @@
+{
+  "name": "Examination",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "decedent_name": {
+      "type": "string"
+    },
+    "exam_type": {
+      "type": "string",
+      "enum": [
+        "external_examination",
+        "full_autopsy",
+        "partial_autopsy",
+        "toxicology",
+        "forensic_analysis",
+        "identification_exam"
+      ]
+    },
+    "scheduled_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "started_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "pending_review"
+      ],
+      "default": "scheduled"
+    },
+    "pathologist_name": {
+      "type": "string"
+    },
+    "pathologist_id": {
+      "type": "string"
+    },
+    "assistant_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "findings_summary": {
+      "type": "string"
+    },
+    "cause_of_death": {
+      "type": "string"
+    },
+    "manner_of_death": {
+      "type": "string",
+      "enum": [
+        "natural",
+        "accident",
+        "homicide",
+        "suicide",
+        "undetermined",
+        "pending"
+      ]
+    },
+    "toxicology_requested": {
+      "type": "boolean",
+      "default": false
+    },
+    "toxicology_results": {
+      "type": "string"
+    },
+    "samples_collected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "report_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_signed_off": {
+      "type": "boolean",
+      "default": false
+    },
+    "signed_off_by": {
+      "type": "string"
+    },
+    "signed_off_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "decedent_id",
+    "exam_type",
+    "status"
+  ]
+}

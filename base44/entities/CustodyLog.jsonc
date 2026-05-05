@@ -1,0 +1,75 @@
+{
+  "name": "CustodyLog",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "scan_in",
+        "scan_out",
+        "moved_to_storage",
+        "moved_to_examination",
+        "moved_to_holding",
+        "released",
+        "transferred",
+        "examined",
+        "personal_effects_logged",
+        "documentation_updated",
+        "alert_raised",
+        "note_added"
+      ]
+    },
+    "from_location": {
+      "type": "string"
+    },
+    "to_location": {
+      "type": "string"
+    },
+    "performed_by": {
+      "type": "string"
+    },
+    "performed_by_role": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "verification_method": {
+      "type": "string",
+      "enum": [
+        "barcode_scan",
+        "qr_scan",
+        "rfid",
+        "manual",
+        "digital_signature"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "is_flagged": {
+      "type": "boolean",
+      "default": false
+    },
+    "flag_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "decedent_id",
+    "action_type",
+    "performed_by",
+    "timestamp"
+  ]
+}

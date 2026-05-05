@@ -1,0 +1,102 @@
+{
+  "name": "Release",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "decedent_name": {
+      "type": "string"
+    },
+    "release_type": {
+      "type": "string",
+      "enum": [
+        "funeral_home",
+        "family",
+        "law_enforcement",
+        "hospital",
+        "medical_examiner",
+        "repatriation",
+        "other"
+      ]
+    },
+    "receiving_party_name": {
+      "type": "string"
+    },
+    "receiving_party_organization": {
+      "type": "string"
+    },
+    "receiving_party_id_type": {
+      "type": "string"
+    },
+    "receiving_party_id_number": {
+      "type": "string"
+    },
+    "receiving_party_contact": {
+      "type": "string"
+    },
+    "authorization_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "identity_verified_by": {
+      "type": "string"
+    },
+    "identity_verified_method": {
+      "type": "string"
+    },
+    "secondary_verifier": {
+      "type": "string"
+    },
+    "documentation_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "personal_effects_released": {
+      "type": "boolean",
+      "default": false
+    },
+    "digital_signature": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verification_in_progress",
+        "approved",
+        "completed",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approval_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "release_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "receipt_number": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "decedent_id",
+    "release_type",
+    "receiving_party_name",
+    "status"
+  ]
+}
