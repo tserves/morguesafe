@@ -3,14 +3,17 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, UserPlus, Shield, Warehouse, 
   FlaskConical, Package, LogOut, Menu, X, Bell,
-  ChevronRight, Fingerprint, FileText, QrCode
+  ChevronRight, Fingerprint, FileText, QrCode,
+  CalendarDays, ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', color: 'text-blue-400' },
+  { path: '/daily', icon: CalendarDays, label: 'Daily Overview', color: 'text-indigo-400' },
   { path: '/intake', icon: UserPlus, label: 'Body Intake', color: 'text-green-400' },
+  { path: '/intake-list', icon: ClipboardList, label: 'Intake List', color: 'text-teal-400' },
   { path: '/custody', icon: Shield, label: 'Chain of Custody', color: 'text-amber-400' },
   { path: '/storage', icon: Warehouse, label: 'Storage', color: 'text-cyan-400' },
   { path: '/examinations', icon: FlaskConical, label: 'Examinations', color: 'text-purple-400' },

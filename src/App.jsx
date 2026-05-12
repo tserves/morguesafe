@@ -16,6 +16,8 @@ import PersonalEffects from '@/pages/PersonalEffects';
 import Release from '@/pages/Release';
 import AuditLog from '@/pages/AuditLog';
 import ScanLookup from '@/pages/ScanLookup';
+import DailyOverview from '@/pages/DailyOverview';
+import IntakeList from '@/pages/IntakeList';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -44,6 +46,8 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/daily" element={<DailyOverview />} />
+        <Route path="/intake-list" element={<IntakeList />} />
         <Route path="/intake" element={<BodyIntake />} />
         <Route path="/decedent/:id" element={<DecedentDetail />} />
         <Route path="/custody" element={<ChainOfCustody />} />

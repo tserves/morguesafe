@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
 import StatusBadge from '@/components/StatusBadge';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Warehouse, Plus, Thermometer, AlertTriangle, 
-  CheckCircle, Loader2, X
+  CheckCircle, Loader2, X, User, ArrowRight
 } from 'lucide-react';
 
 export default function StorageManagement() {
@@ -21,9 +22,15 @@ export default function StorageManagement() {
     temperature_celsius: -4, status: 'available', location_code: '', notes: ''
   });
 
+  const [decedents, setDecedents] = useState([]);
+
   useEffect(() => {
-    base44.entities.StorageUnit.list('label').then(u => {
+    Promise.all([
+      base44.entities.StorageUnit.list('label'),
+      base44.entities.Decedent.list('-arrival_datetime', 200),
+    ]).then(([u, d]) => {
       setUnits(u);
+      setDecedents(d);
       setLoading(false);
     });
   }, []);
@@ -195,11 +202,33 @@ export default function StorageManagement() {
                           />
                         </div>
                       </div>
-                      {unit.current_decedent_name && (
-                        <p className="text-[10px] text-muted-foreground mt-2 truncate">
-                          {unit.current_decedent_name}
-                        </p>
-                      )}
+                      {/* Occupant info from decedents */}
+                      {(() => {
+                        const occupant = decedents.find(d =>
+                          d.storage_location_label === unit.label && d.status !== 'released' && d.status !== 'transferred'
+                        );
+                        if (!occupant) return null;
+                        const oName = occupant.first_name
+                          ? `${occupant.first_name} ${occupant.last_name || ''}`.trim()
+                          : 'Unidentified';
+                        return (
+                          <div className="mt-3 pt-2.5 border-t border-dashed">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <User className="w-3 h-3 text-muted-foreground" />
+                              <span className="font-mono text-[10px] text-muted-foreground">{occupant.unique_id}</span>
+                            </div>
+                            <p className="text-xs font-medium text-foreground truncate">{oName}</p>
+                            {occupant.identification_status === 'unidentified' && (
+                              <p className="text-[10px] text-amber-600 flex items-center gap-0.5 mt-0.5">
+                                <AlertTriangle className="w-2.5 h-2.5" /> Unidentified
+                              </p>
+                            )}
+                            <Link to={`/decedent/${occupant.id}`} className="text-[10px] text-primary hover:underline flex items-center gap-0.5 mt-1">
+                              View case <ArrowRight className="w-2.5 h-2.5" />
+                            </Link>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
