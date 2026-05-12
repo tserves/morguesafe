@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { 
   Users, AlertTriangle, Warehouse, FlaskConical,
   TrendingUp, Clock, CheckCircle, UserPlus,
-  Shield, ArrowRight
+  Shield, ArrowRight, QrCode
 } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import DecedentCard from '@/components/DecedentCard';
@@ -161,7 +161,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'New Intake', path: '/intake', icon: UserPlus },
-                { label: 'Scan Body', path: '/custody', icon: Shield },
+                { label: 'Scan / Lookup', path: '/scan', icon: QrCode },
                 { label: 'Storage Map', path: '/storage', icon: Warehouse },
                 { label: 'Audit Log', path: '/audit', icon: TrendingUp },
               ].map(({ label, path, icon: Icon }) => (

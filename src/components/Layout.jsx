@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, UserPlus, Shield, Warehouse, 
   FlaskConical, Package, LogOut, Menu, X, Bell,
-  ChevronRight, Fingerprint, FileText
+  ChevronRight, Fingerprint, FileText, QrCode
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
@@ -16,6 +16,7 @@ const navItems = [
   { path: '/examinations', icon: FlaskConical, label: 'Examinations', color: 'text-purple-400' },
   { path: '/effects', icon: Package, label: 'Personal Effects', color: 'text-orange-400' },
   { path: '/release', icon: LogOut, label: 'Release', color: 'text-red-400' },
+  { path: '/scan', icon: QrCode, label: 'Scan / Lookup', color: 'text-emerald-400' },
   { path: '/audit', icon: FileText, label: 'Audit Logs', color: 'text-slate-400' },
 ];
 

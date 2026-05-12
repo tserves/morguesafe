@@ -15,6 +15,7 @@ import Examinations from '@/pages/Examinations';
 import PersonalEffects from '@/pages/PersonalEffects';
 import Release from '@/pages/Release';
 import AuditLog from '@/pages/AuditLog';
+import ScanLookup from '@/pages/ScanLookup';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
         <Route path="/effects" element={<PersonalEffects />} />
         <Route path="/release" element={<Release />} />
         <Route path="/audit" element={<AuditLog />} />
+        <Route path="/scan" element={<ScanLookup />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

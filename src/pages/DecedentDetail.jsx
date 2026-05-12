@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, MapPin, Clock, User, Shield, Package,
   FlaskConical, LogOut, AlertTriangle, CheckCircle,
-  ChevronDown, Loader2
+  ChevronDown, Loader2, QrCode
 } from 'lucide-react';
+import LabelPrintModal from '@/components/LabelPrintModal';
 import { format } from 'date-fns';
 
 const STATUS_FLOW = ['intake', 'storage', 'examination', 'holding', 'released'];
@@ -25,6 +26,7 @@ export default function DecedentDetail() {
   const [movingStatus, setMovingStatus] = useState(false);
   const [newLocation, setNewLocation] = useState('');
   const [moveNote, setMoveNote] = useState('');
+  const [showLabel, setShowLabel] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -112,6 +114,9 @@ export default function DecedentDetail() {
           </div>
           <h1 className="text-xl font-semibold">{name}</h1>
         </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowLabel(true)}>
+          <QrCode className="w-3.5 h-3.5" /> Label
+        </Button>
         <Link to="/release">
           <Button variant="outline" size="sm" className="gap-1.5">
             <LogOut className="w-3.5 h-3.5" /> Release
@@ -249,7 +254,9 @@ export default function DecedentDetail() {
           </div>
         </div>
 
-        {/* Chain of Custody Timeline */}
+        {showLabel && <LabelPrintModal decedent={decedent} onClose={() => setShowLabel(false)} />}
+
+      {/* Chain of Custody Timeline */}
         <div className="bg-card border rounded-xl p-5 h-fit">
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
             <Shield className="w-4 h-4" /> Chain of Custody
