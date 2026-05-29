@@ -35,14 +35,13 @@ export default function Layout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Fingerprint className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-sidebar-primary">MorgueSafe</p>
-            <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">Chain of Custody</p>
-          </div>
+        <div className="flex flex-col items-center px-5 py-5 border-b border-sidebar-border gap-2">
+          <img
+            src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/b77390598_CustiviantLogo4k.png"
+            alt="Custiviant"
+            className="h-14 w-auto object-contain"
+          />
+          <p className="text-[9px] text-sidebar-foreground/40 uppercase tracking-widest">Chain of Custody</p>
         </div>
 
         {/* Nav */}
