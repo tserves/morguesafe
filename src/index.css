@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,78 +6,46 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 10%;
+    --background: 220 25% 97%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 10%;
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 10%;
-    --primary: 215 60% 18%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 210 15% 93%;
-    --secondary-foreground: 215 25% 20%;
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 15% 45%;
-    --accent: 210 15% 93%;
-    --accent-foreground: 215 25% 15%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 215 60% 18%;
-    --radius: 0.5rem;
-    --amber: 38 95% 53%;
-    --amber-foreground: 38 95% 15%;
-    --success: 142 71% 35%;
-    --success-foreground: 0 0% 98%;
-    --sidebar-background: 215 45% 12%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 210 20% 98%;
-    --sidebar-primary-foreground: 215 45% 12%;
-    --sidebar-accent: 215 35% 20%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 215 35% 18%;
-    --sidebar-ring: 215 60% 45%;
-    --chart-1: 215 60% 35%;
-    --chart-2: 142 60% 35%;
-    --chart-3: 38 90% 50%;
-    --chart-4: 0 65% 50%;
-    --chart-5: 270 60% 50%;
-  }
+    --popover-foreground: 220 20% 10%;
+    --primary: 231 80% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 18% 94%;
+    --secondary-foreground: 220 20% 20%;
+    --muted: 220 18% 95%;
+    --muted-foreground: 220 12% 50%;
+    --accent: 231 80% 96%;
+    --accent-foreground: 231 80% 40%;
+    --destructive: 0 72% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 18% 90%;
+    --input: 220 18% 92%;
+    --ring: 231 80% 56%;
+    --radius: 0.625rem;
+    --success: 152 68% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 96% 50%;
+    --warning-foreground: 38 96% 15%;
 
-  .dark {
-    --background: 215 30% 7%;
-    --foreground: 210 20% 92%;
-    --card: 215 25% 10%;
-    --card-foreground: 210 20% 92%;
-    --popover: 215 25% 10%;
-    --popover-foreground: 210 20% 92%;
-    --primary: 210 85% 60%;
-    --primary-foreground: 215 45% 8%;
-    --secondary: 215 25% 16%;
-    --secondary-foreground: 210 20% 88%;
-    --muted: 215 25% 14%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 215 25% 16%;
-    --accent-foreground: 210 20% 90%;
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
-    --ring: 210 85% 60%;
-    --sidebar-background: 215 40% 6%;
-    --sidebar-foreground: 210 20% 80%;
-    --sidebar-primary: 210 85% 60%;
-    --sidebar-primary-foreground: 215 45% 8%;
-    --sidebar-accent: 215 30% 14%;
-    --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 215 30% 12%;
-    --sidebar-ring: 210 85% 60%;
-    --chart-1: 210 85% 60%;
-    --chart-2: 142 65% 45%;
-    --chart-3: 38 90% 55%;
-    --chart-4: 0 65% 55%;
-    --chart-5: 270 60% 60%;
+    /* Sidebar — crisp white with colored accents */
+    --sidebar-background: 231 35% 12%;
+    --sidebar-foreground: 220 20% 80%;
+    --sidebar-primary: 231 80% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 231 40% 20%;
+    --sidebar-accent-foreground: 220 20% 92%;
+    --sidebar-border: 231 30% 18%;
+    --sidebar-ring: 231 80% 56%;
+
+    --chart-1: 231 80% 56%;
+    --chart-2: 152 68% 42%;
+    --chart-3: 38 96% 50%;
+    --chart-4: 0 72% 54%;
+    --chart-5: 291 70% 58%;
   }
 }
 
@@ -87,22 +55,75 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
+    @apply bg-background text-foreground font-inter antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-inter tracking-tight;
   }
 }
 
+/* ── Utility classes ─────────────────────────────────── */
 .font-mono-id {
   font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
 }
 
-.status-badge {
-  @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium;
+/* Premium card */
+.card-premium {
+  @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm;
 }
 
+/* Glass effect */
+.glass {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Sidebar glow on active */
+.nav-active-glow {
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.3), inset 0 0 12px rgba(99,102,241,0.08);
+}
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Status dots */
+.pulse-dot {
+  @apply relative inline-flex;
+}
+.pulse-dot::before {
+  content: '';
+  @apply absolute inset-0 rounded-full animate-ping opacity-60;
+  background: currentColor;
+}
+
+/* Custody timeline */
 .custody-line {
-  @apply relative pl-6 before:absolute before:left-2 before:top-2 before:bottom-0 before:w-0.5 before:bg-border;
+  @apply relative pl-6;
 }
-
+.custody-line::before {
+  content: '';
+  @apply absolute left-2.5 top-3 bottom-0 w-px bg-gradient-to-b from-indigo-300 to-transparent;
+}
 .custody-dot {
-  @apply absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-background ring-2;
+  @apply absolute left-0 top-1.5 w-5 h-5 rounded-full flex items-center justify-center bg-white border-2 border-indigo-400 shadow-sm;
 }

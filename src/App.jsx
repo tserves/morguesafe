@@ -7,8 +7,8 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
-import BodyIntake from '@/pages/BodyIntake';
-import DecedentDetail from '@/pages/DecedentDetail';
+import BodyIntake from '@/pages/BodyIntake.jsx';
+import DecedentDetail from '@/pages/DecedentDetail.jsx';
 import ChainOfCustody from '@/pages/ChainOfCustody';
 import StorageManagement from '@/pages/StorageManagement';
 import Examinations from '@/pages/Examinations';
@@ -17,7 +17,7 @@ import Release from '@/pages/Release';
 import AuditLog from '@/pages/AuditLog';
 import ScanLookup from '@/pages/ScanLookup';
 import DailyOverview from '@/pages/DailyOverview';
-import IntakeList from '@/pages/IntakeList';
+import IntakeList from '@/pages/IntakeList.jsx';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
