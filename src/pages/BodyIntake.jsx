@@ -27,6 +27,7 @@ export default function BodyIntake() {
     unique_id: generateUniqueId(),
     source_type: '',
     source_name: '',
+    hospital_floor: '',
     source_contact: '',
     arrival_datetime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     condition_on_arrival: '',
@@ -134,6 +135,12 @@ export default function BodyIntake() {
               <Label>Source Name / Institution</Label>
               <Input className="mt-1.5" value={form.source_name} onChange={e => set('source_name', e.target.value)} placeholder="e.g. City General Hospital" />
             </div>
+            {form.source_type === 'hospital' && (
+              <div>
+                <Label>Hospital Floor / Ward</Label>
+                <Input className="mt-1.5" value={form.hospital_floor} onChange={e => set('hospital_floor', e.target.value)} placeholder="e.g. Floor 3 — ICU, Basement Morgue" />
+              </div>
+            )}
             <div>
               <Label>Source Contact</Label>
               <Input className="mt-1.5" value={form.source_contact} onChange={e => set('source_contact', e.target.value)} placeholder="Phone or email" />

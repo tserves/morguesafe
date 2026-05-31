@@ -62,6 +62,10 @@
     "source_name": {
       "type": "string"
     },
+    "hospital_floor": {
+      "type": "string",
+      "description": "Floor or ward within the hospital the body was received from"
+    },
     "source_contact": {
       "type": "string"
     },
