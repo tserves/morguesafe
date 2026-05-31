@@ -35,11 +35,11 @@ export default function Layout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Logo */}
-        <div className="flex flex-col items-center px-5 py-5 border-b border-sidebar-border gap-2">
+        <div className="flex flex-col items-center px-4 py-6 border-b border-sidebar-border gap-2">
           <img
             src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/b77390598_CustiviantLogo4k.png"
             alt="Custiviant"
-            style={{ height: '72px' }} className="w-auto object-contain"
+            style={{ height: '110px', width: '220px', objectFit: 'contain', objectPosition: 'center' }}
           />
           <p className="text-[9px] text-sidebar-foreground/40 uppercase tracking-widest">Chain of Custody</p>
         </div>
