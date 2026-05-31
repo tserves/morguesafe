@@ -39,7 +39,7 @@ export default function Layout() {
           <img
             src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/b77390598_CustiviantLogo4k.png"
             alt="Custiviant"
-            className="h-14 w-auto object-contain"
+            style={{ height: '72px' }} className="w-auto object-contain"
           />
           <p className="text-[9px] text-sidebar-foreground/40 uppercase tracking-widest">Chain of Custody</p>
         </div>
