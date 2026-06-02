@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import DonorBadge from '@/components/DonorBadge';
+import StoragePicker from '@/components/StoragePicker';
 
 const TYPE_LABELS = {
   refrigerated_tray: 'Refrigerated',
@@ -30,7 +31,6 @@ const EDITABLE_FIELDS = [
   { key: 'law_enforcement_case', label: 'LE Case #', type: 'text' },
   { key: 'intake_officer', label: 'Intake Officer', type: 'text' },
   { key: 'source_name', label: 'Source Name', type: 'text' },
-  { key: 'storage_location_label', label: 'Storage Location', type: 'text' },
   { key: 'condition_notes', label: 'Condition Notes', type: 'textarea' },
   { key: 'notes', label: 'Notes', type: 'textarea' },
   { key: 'next_of_kin_name', label: 'Next of Kin', type: 'text' },
@@ -42,8 +42,55 @@ function EditModal({ decedent, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const handleStorageSelect = (unit) => {
+    if (!unit) {
+      set('storage_location_id', null);
+      set('storage_location_label', null);
+    } else {
+      set('storage_location_id', unit.id);
+      set('storage_location_label', unit.label);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
+
+    // Handle storage unit occupancy changes
+    const prevStorageId = decedent.storage_location_id;
+    const newStorageId = form.storage_location_id;
+
+    if (prevStorageId !== newStorageId) {
+      // Vacate old unit
+      if (prevStorageId) {
+        const oldUnits = await base44.entities.StorageUnit.filter({ id: prevStorageId });
+        if (oldUnits?.length) {
+          const old = oldUnits[0];
+          await base44.entities.StorageUnit.update(prevStorageId, {
+            current_occupancy: Math.max(0, (old.current_occupancy || 1) - 1),
+            status: 'available',
+            current_decedent_id: null,
+            current_decedent_name: null,
+          });
+        }
+      }
+      // Occupy new unit
+      if (newStorageId) {
+        const newUnits = await base44.entities.StorageUnit.filter({ id: newStorageId });
+        if (newUnits?.length) {
+          const nu = newUnits[0];
+          const decedentName = form.first_name
+            ? `${form.first_name} ${form.last_name || ''}`.trim()
+            : decedent.unique_id;
+          await base44.entities.StorageUnit.update(newStorageId, {
+            current_occupancy: (nu.current_occupancy || 0) + 1,
+            status: 'occupied',
+            current_decedent_id: decedent.id,
+            current_decedent_name: decedentName,
+          });
+        }
+      }
+    }
+
     await onSave(decedent.id, form);
     setSaving(false);
     onClose();
@@ -51,7 +98,7 @@ function EditModal({ decedent, onSave, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg my-8">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div>
             <p className="font-mono text-xs text-muted-foreground">{decedent.unique_id}</p>
@@ -64,7 +111,8 @@ function EditModal({ decedent, onSave, onClose }) {
           </button>
         </div>
 
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-5">
+          {/* Status row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Status</Label>
@@ -90,6 +138,7 @@ function EditModal({ decedent, onSave, onClose }) {
             </div>
           </div>
 
+          {/* Basic fields */}
           <div className="grid grid-cols-2 gap-4">
             {EDITABLE_FIELDS.map(({ key, label, type }) =>
               type === 'textarea' ? null : (
@@ -101,6 +150,7 @@ function EditModal({ decedent, onSave, onClose }) {
             )}
           </div>
 
+          {/* Textareas */}
           {EDITABLE_FIELDS.filter(f => f.type === 'textarea').map(({ key, label }) => (
             <div key={key}>
               <Label>{label}</Label>
@@ -108,6 +158,32 @@ function EditModal({ decedent, onSave, onClose }) {
             </div>
           ))}
 
+          {/* Storage Assignment */}
+          <div>
+            <Label className="flex items-center gap-2 mb-2">
+              <Warehouse className="w-4 h-4 text-cyan-500" />
+              Storage Assignment
+              {form.storage_location_label && (
+                <span className="ml-auto text-xs font-normal text-cyan-600 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full">
+                  Current: {form.storage_location_label}
+                </span>
+              )}
+            </Label>
+            <StoragePicker
+              selectedUnitId={form.storage_location_id}
+              onSelect={handleStorageSelect}
+            />
+            {form.storage_location_id && (
+              <button
+                onClick={() => handleStorageSelect(null)}
+                className="mt-2 text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+              >
+                Clear storage assignment
+              </button>
+            )}
+          </div>
+
+          {/* Autopsy */}
           <div className="flex items-center gap-3">
             <input type="checkbox" id="autopsy-edit" checked={!!form.requires_autopsy} onChange={e => set('requires_autopsy', e.target.checked)} className="w-4 h-4 rounded accent-primary" />
             <Label htmlFor="autopsy-edit" className="cursor-pointer">Autopsy Required</Label>
