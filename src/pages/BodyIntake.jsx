@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
+import StoragePicker from '@/components/StoragePicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, AlertCircle, Loader2, ClipboardList } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, ClipboardList, Warehouse } from 'lucide-react';
 import { format } from 'date-fns';
 
 function generateUniqueId() {
@@ -16,13 +17,14 @@ function generateUniqueId() {
   return `MS-${year}-${rand}`;
 }
 
-const steps = ['Source Info', 'Identity', 'Physical', 'Assignment'];
+const steps = ['Source Info', 'Identity', 'Physical', 'Storage', 'Assignment'];
 
 export default function BodyIntake() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [selectedStorage, setSelectedStorage] = useState(null);
   const [form, setForm] = useState({
     unique_id: generateUniqueId(),
     source_type: '',
@@ -58,28 +60,54 @@ export default function BodyIntake() {
 
   const handleSubmit = async () => {
     setSaving(true);
-    const decedent = await base44.entities.Decedent.create({
+
+    const decedentData = {
       ...form,
       estimated_age: form.estimated_age ? Number(form.estimated_age) : undefined,
       height_cm: form.height_cm ? Number(form.height_cm) : undefined,
       weight_kg: form.weight_kg ? Number(form.weight_kg) : undefined,
-    });
+    };
+
+    // Attach storage if selected
+    if (selectedStorage) {
+      decedentData.storage_location_id = selectedStorage.id;
+      decedentData.storage_location_label = selectedStorage.label;
+      decedentData.status = 'storage';
+    }
+
+    const decedent = await base44.entities.Decedent.create(decedentData);
+
+    // Update storage unit occupancy + status if assigned
+    if (selectedStorage) {
+      const newOccupancy = (selectedStorage.current_occupancy ?? 0) + 1;
+      const isFull = newOccupancy >= (selectedStorage.capacity ?? 1);
+      await base44.entities.StorageUnit.update(selectedStorage.id, {
+        current_occupancy: newOccupancy,
+        status: isFull ? 'occupied' : 'available',
+        current_decedent_id: decedent.id,
+        current_decedent_name: decedent.first_name
+          ? `${decedent.first_name} ${decedent.last_name || ''}`.trim()
+          : decedent.unique_id,
+      });
+    }
 
     await base44.entities.CustodyLog.create({
       decedent_id: decedent.id,
       decedent_unique_id: decedent.unique_id,
-      action_type: 'intake',
-      to_location: 'Intake Bay',
+      action_type: selectedStorage ? 'moved_to_storage' : 'intake',
+      to_location: selectedStorage ? selectedStorage.label : 'Intake Bay',
       performed_by: form.intake_officer || 'System',
       performed_by_role: 'Intake Staff',
       timestamp: new Date().toISOString(),
-      notes: `Initial intake from ${form.source_name || form.source_type}`,
+      notes: selectedStorage
+        ? `Intake from ${form.source_name || form.source_type}. Assigned to ${selectedStorage.label}`
+        : `Initial intake from ${form.source_name || form.source_type}`,
       verification_method: 'manual',
     });
 
     setSaving(false);
     setSaved(true);
-    setTimeout(() => navigate(`/decedent/${decedent.id}`), 1500);
+    setTimeout(() => navigate(`/decedent/${decedent.id}`), 1800);
   };
 
   if (saved) {
@@ -89,8 +117,13 @@ export default function BodyIntake() {
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
         <h2 className="text-lg font-semibold text-foreground">Intake Recorded</h2>
-        <p className="text-sm text-muted-foreground mt-1">Redirecting to case file...</p>
-        <p className="font-mono text-sm mt-2 bg-muted px-3 py-1 rounded">{form.unique_id}</p>
+        {selectedStorage && (
+          <p className="text-sm text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg mt-2 flex items-center gap-2">
+            <Warehouse className="w-4 h-4" /> Assigned to <strong>{selectedStorage.label}</strong>
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground mt-2">Redirecting to case file...</p>
+        <p className="font-mono text-sm mt-1 bg-muted px-3 py-1 rounded">{form.unique_id}</p>
       </div>
     );
   }
@@ -251,6 +284,23 @@ export default function BodyIntake() {
 
         {step === 3 && (
           <>
+            <div className="flex items-center gap-2 mb-1">
+              <Warehouse className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium text-foreground">Assign Storage Location</p>
+              <span className="text-xs text-muted-foreground ml-auto">Optional — can assign later</span>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-3">
+              Select an available storage unit below. Only available units are shown.
+            </p>
+            <StoragePicker
+              selectedId={selectedStorage?.id}
+              onSelect={unit => setSelectedStorage(unit)}
+            />
+          </>
+        )}
+
+        {step === 4 && (
+          <>
             <div className="bg-muted/50 rounded-lg p-4 mb-2">
               <div className="flex items-center gap-2 mb-3">
                 <ClipboardList className="w-4 h-4 text-primary" />
@@ -271,6 +321,16 @@ export default function BodyIntake() {
                   <span className={`text-sm ${form[key] ? 'text-foreground' : 'text-amber-700'}`}>{label}</span>
                 </div>
               ))}
+              <div className="flex items-center gap-2 py-1">
+                {selectedStorage ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                )}
+                <span className={`text-sm ${selectedStorage ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Storage assigned {selectedStorage ? `— ${selectedStorage.label}` : '(pending)'}
+                </span>
+              </div>
             </div>
             <div>
               <Label>Next of Kin Name</Label>

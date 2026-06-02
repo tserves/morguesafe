@@ -8,11 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  UserPlus, Search, Pencil, X, Check, Loader2, 
-  AlertTriangle, ChevronRight, Filter
+import {
+  UserPlus, Search, Pencil, X, Check, Loader2,
+  AlertTriangle, ChevronRight, Filter, Warehouse, Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
+
+const TYPE_LABELS = {
+  refrigerated_tray: 'Refrigerated',
+  freezer_compartment: 'Freezer',
+  room_temperature_shelf: 'Room Temp',
+  isolation_unit: 'Isolation',
+  decomp_unit: 'Decomp',
+};
 
 const EDITABLE_FIELDS = [
   { key: 'first_name', label: 'First Name', type: 'text' },
@@ -117,16 +125,46 @@ function EditModal({ decedent, onSave, onClose }) {
   );
 }
 
+function StorageCell({ decedent, storageUnits }) {
+  if (!decedent.storage_location_id && !decedent.storage_location_label) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+        <Clock className="w-3 h-3" /> Storage Pending
+      </span>
+    );
+  }
+
+  const unit = storageUnits.find(u => u.id === decedent.storage_location_id);
+  return (
+    <div>
+      <p className="text-xs font-medium text-foreground flex items-center gap-1">
+        <Warehouse className="w-3 h-3 text-cyan-500" />
+        {decedent.storage_location_label}
+      </p>
+      {unit?.unit_type && (
+        <p className="text-[10px] text-muted-foreground mt-0.5">{TYPE_LABELS[unit.unit_type] || unit.unit_type}</p>
+      )}
+    </div>
+  );
+}
+
 export default function IntakeList() {
   const [decedents, setDecedents] = useState([]);
+  const [storageUnits, setStorageUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [storageFilter, setStorageFilter] = useState('all'); // 'all' | 'assigned' | 'pending'
+  const [storageTypeFilter, setStorageTypeFilter] = useState('all');
   const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => {
-    base44.entities.Decedent.list('-arrival_datetime', 200).then(d => {
+    Promise.all([
+      base44.entities.Decedent.list('-arrival_datetime', 200),
+      base44.entities.StorageUnit.list(),
+    ]).then(([d, s]) => {
       setDecedents(d);
+      setStorageUnits(s);
       setLoading(false);
     });
   }, []);
@@ -136,22 +174,40 @@ export default function IntakeList() {
     setDecedents(prev => prev.map(d => d.id === id ? updated : d));
   };
 
+  const storageTypes = [...new Set(storageUnits.map(u => u.unit_type))];
+
   const filtered = decedents.filter(d => {
     const name = `${d.first_name || ''} ${d.last_name || ''}`.toLowerCase();
     const matchSearch = !search ||
       name.includes(search.toLowerCase()) ||
       d.unique_id?.toLowerCase().includes(search.toLowerCase()) ||
       d.case_number?.toLowerCase().includes(search.toLowerCase()) ||
-      d.intake_officer?.toLowerCase().includes(search.toLowerCase());
+      d.intake_officer?.toLowerCase().includes(search.toLowerCase()) ||
+      d.storage_location_label?.toLowerCase().includes(search.toLowerCase());
+
     const matchStatus = statusFilter === 'all' || d.status === statusFilter;
-    return matchSearch && matchStatus;
+
+    const hasStorage = !!(d.storage_location_id || d.storage_location_label);
+    const matchStorage =
+      storageFilter === 'all' ||
+      (storageFilter === 'assigned' && hasStorage) ||
+      (storageFilter === 'pending' && !hasStorage);
+
+    const unit = storageUnits.find(u => u.id === d.storage_location_id);
+    const matchStorageType =
+      storageTypeFilter === 'all' ||
+      (unit && unit.unit_type === storageTypeFilter);
+
+    return matchSearch && matchStatus && matchStorage && matchStorageType;
   });
 
+  const pendingCount = decedents.filter(d => !d.storage_location_id && !d.storage_location_label).length;
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <PageHeader
         title="Intake List"
-        subtitle={`${decedents.length} total cases`}
+        subtitle={`${decedents.length} total cases · ${pendingCount} storage pending`}
         actions={
           <Link to="/intake">
             <Button size="sm" className="gap-2">
@@ -161,15 +217,17 @@ export default function IntakeList() {
         }
       />
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Search by name, ID, case #, officer..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input className="pl-9" placeholder="Search name, ID, case #, storage..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-40">
             <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
@@ -178,7 +236,46 @@ export default function IntakeList() {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={storageFilter} onValueChange={setStorageFilter}>
+          <SelectTrigger className="w-44">
+            <Warehouse className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="Storage" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Storage</SelectItem>
+            <SelectItem value="assigned">Storage Assigned</SelectItem>
+            <SelectItem value="pending">Storage Pending</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={storageTypeFilter} onValueChange={setStorageTypeFilter}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Storage Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {storageTypes.map(t => (
+              <SelectItem key={t} value={t}>{TYPE_LABELS[t] || t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {/* Summary chips */}
+      {pendingCount > 0 && (
+        <button
+          onClick={() => setStorageFilter(storageFilter === 'pending' ? 'all' : 'pending')}
+          className={`mb-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            storageFilter === 'pending'
+              ? 'bg-amber-500 text-white border-amber-500'
+              : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+          }`}
+        >
+          <Clock className="w-3 h-3" />
+          {pendingCount} awaiting storage assignment
+        </button>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
@@ -198,7 +295,7 @@ export default function IntakeList() {
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Status</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Arrival</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Source</th>
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Location</th>
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Storage</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Officer</th>
                   <th className="text-right px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Actions</th>
                 </tr>
@@ -231,8 +328,8 @@ export default function IntakeList() {
                         <p>{d.source_name || '—'}</p>
                         <p className="capitalize text-muted-foreground/70">{d.source_type?.replace('_',' ')}</p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {d.storage_location_label || '—'}
+                      <td className="px-4 py-3">
+                        <StorageCell decedent={d} storageUnits={storageUnits} />
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">
                         {d.intake_officer || '—'}
