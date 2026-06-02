@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, AlertCircle, Loader2, ClipboardList, Warehouse } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, ClipboardList, Warehouse, Heart } from 'lucide-react';
 import { format } from 'date-fns';
+import DonationStep from '@/components/DonationStep';
 
 function generateUniqueId() {
   const year = new Date().getFullYear();
@@ -17,7 +18,7 @@ function generateUniqueId() {
   return `MS-${year}-${rand}`;
 }
 
-const steps = ['Source Info', 'Identity', 'Physical', 'Storage', 'Assignment'];
+const steps = ['Source Info', 'Identity', 'Physical', 'Storage', 'Donation', 'Assignment'];
 
 export default function BodyIntake() {
   const navigate = useNavigate();
@@ -27,6 +28,9 @@ export default function BodyIntake() {
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [form, setForm] = useState({
     unique_id: generateUniqueId(),
+    is_donor: 'unknown',
+    organs_for_donation: [],
+    tissues_for_donation: [],
     source_type: '',
     source_name: '',
     hospital_floor: '',
@@ -75,6 +79,11 @@ export default function BodyIntake() {
       decedentData.status = 'storage';
     }
 
+    // Flag donor cases
+    if (form.is_donor === 'yes') {
+      decedentData.flags = [...(decedentData.flags || []), 'DONOR CASE', 'HIGH PRIORITY'];
+    }
+
     const decedent = await base44.entities.Decedent.create(decedentData);
 
     // Update storage unit occupancy + status if assigned
@@ -105,6 +114,21 @@ export default function BodyIntake() {
       verification_method: 'manual',
     });
 
+    // Log donor case audit entry
+    if (form.is_donor === 'yes') {
+      await base44.entities.CustodyLog.create({
+        decedent_id: decedent.id,
+        decedent_unique_id: decedent.unique_id,
+        action_type: 'note_added',
+        performed_by: form.intake_officer || 'System',
+        performed_by_role: 'Intake Staff',
+        timestamp: new Date().toISOString(),
+        notes: `DONOR CASE registered. Organs: ${(form.organs_for_donation || []).join(', ') || 'TBD'}. Tissues: ${(form.tissues_for_donation || []).join(', ') || 'TBD'}. Coordinator: ${form.donation_coordinator_name || 'Not assigned'}. Status: ${form.donation_status || 'pending_assessment'}.`,
+        is_flagged: true,
+        flag_reason: 'Donor case — high priority',
+      });
+    }
+
     setSaving(false);
     setSaved(true);
     setTimeout(() => navigate(`/decedent/${decedent.id}`), 1800);
@@ -120,6 +144,11 @@ export default function BodyIntake() {
         {selectedStorage && (
           <p className="text-sm text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg mt-2 flex items-center gap-2">
             <Warehouse className="w-4 h-4" /> Assigned to <strong>{selectedStorage.label}</strong>
+          </p>
+        )}
+        {form.is_donor === 'yes' && (
+          <p className="text-sm text-red-700 bg-red-50 border border-red-300 px-3 py-1.5 rounded-lg mt-2 flex items-center gap-2">
+            <Heart className="w-4 h-4 fill-red-400" /> Flagged as <strong>DONOR CASE — HIGH PRIORITY</strong>
           </p>
         )}
         <p className="text-sm text-muted-foreground mt-2">Redirecting to case file...</p>
@@ -300,6 +329,10 @@ export default function BodyIntake() {
         )}
 
         {step === 4 && (
+          <DonationStep form={form} set={set} />
+        )}
+
+        {step === 5 && (
           <>
             <div className="bg-muted/50 rounded-lg p-4 mb-2">
               <div className="flex items-center gap-2 mb-3">
@@ -329,6 +362,12 @@ export default function BodyIntake() {
                 )}
                 <span className={`text-sm ${selectedStorage ? 'text-foreground' : 'text-muted-foreground'}`}>
                   Storage assigned {selectedStorage ? `— ${selectedStorage.label}` : '(pending)'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <CheckCircle className={`w-4 h-4 ${form.is_donor === 'yes' ? 'text-red-500' : 'text-green-600'}`} />
+                <span className="text-sm">
+                  Donation screening: <strong>{form.is_donor === 'yes' ? '🫀 DONOR CASE — HIGH PRIORITY' : form.is_donor === 'no' ? 'Not a donor' : 'Unknown'}</strong>
                 </span>
               </div>
             </div>

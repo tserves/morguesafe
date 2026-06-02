@@ -8,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, MapPin, Clock, User, Shield, Package,
   FlaskConical, LogOut, AlertTriangle, CheckCircle,
-  ChevronDown, Loader2, QrCode
+  ChevronDown, Loader2, QrCode, Heart
 } from 'lucide-react';
 import LabelPrintModal from '@/components/LabelPrintModal';
+import DonorBadge from '@/components/DonorBadge';
 import { format } from 'date-fns';
 
 const STATUS_FLOW = ['intake', 'storage', 'examination', 'holding', 'released'];
@@ -107,10 +108,11 @@ export default function DecedentDetail() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-0.5">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <span className="font-mono text-sm bg-muted px-2 py-0.5 rounded text-muted-foreground">{decedent.unique_id}</span>
             <StatusBadge status={decedent.status} />
             <StatusBadge status={decedent.identification_status} />
+            <DonorBadge decedent={decedent} />
           </div>
           <h1 className="text-xl font-semibold">{name}</h1>
         </div>
@@ -162,6 +164,71 @@ export default function DecedentDetail() {
               </div>
             )}
           </div>
+
+          {/* Donor Info Card */}
+          {decedent.is_donor === 'yes' && (
+            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
+              <h2 className="font-semibold text-sm text-red-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Heart className="w-4 h-4 fill-red-400" /> Organ & Tissue Donation
+                <span className="ml-auto text-xs px-2 py-0.5 bg-red-100 rounded-full">
+                  {decedent.donation_status?.replace(/_/g, ' ') || 'Pending Assessment'}
+                </span>
+              </h2>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                {decedent.donation_organization && (
+                  <div><p className="text-xs text-muted-foreground">Organization</p><p className="font-medium">{decedent.donation_organization}</p></div>
+                )}
+                {decedent.donation_coordinator_name && (
+                  <div><p className="text-xs text-muted-foreground">Coordinator</p><p className="font-medium">{decedent.donation_coordinator_name}</p></div>
+                )}
+                {decedent.donation_coordinator_contact && (
+                  <div><p className="text-xs text-muted-foreground">Coordinator Contact</p><p className="font-medium">{decedent.donation_coordinator_contact}</p></div>
+                )}
+                {decedent.donor_card_verified && (
+                  <div><p className="text-xs text-muted-foreground">Card Verified</p><p className="font-medium capitalize">{decedent.donor_card_verified}</p></div>
+                )}
+                {decedent.recovery_team_assigned && (
+                  <div><p className="text-xs text-muted-foreground">Recovery Team</p><p className="font-medium">{decedent.recovery_team_assigned}</p></div>
+                )}
+                {decedent.recovery_facility && (
+                  <div><p className="text-xs text-muted-foreground">Recovery Facility</p><p className="font-medium">{decedent.recovery_facility}</p></div>
+                )}
+                {decedent.recovery_datetime && (
+                  <div><p className="text-xs text-muted-foreground">Recovery Date</p><p className="font-medium">{format(new Date(decedent.recovery_datetime), 'MMM d, yyyy HH:mm')}</p></div>
+                )}
+              </div>
+              {(decedent.organs_for_donation?.length > 0 || decedent.tissues_for_donation?.length > 0) && (
+                <div className="mt-4 pt-4 border-t border-red-200 space-y-2">
+                  {decedent.organs_for_donation?.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Organs</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {decedent.organs_for_donation.map(o => (
+                          <span key={o} className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full capitalize border border-red-200">{o.replace('_',' ')}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {decedent.tissues_for_donation?.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Tissues</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {decedent.tissues_for_donation.map(t => (
+                          <span key={t} className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full capitalize border border-rose-200">{t.replace('_',' ')}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {decedent.donation_special_handling && (
+                <div className="mt-3 pt-3 border-t border-red-200">
+                  <p className="text-xs text-muted-foreground">Special Handling</p>
+                  <p className="text-sm mt-0.5">{decedent.donation_special_handling}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Move Action */}
           {availableNext.length > 0 && (

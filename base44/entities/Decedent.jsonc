@@ -64,7 +64,7 @@
     },
     "hospital_floor": {
       "type": "string",
-      "description": "Floor or ward within the hospital the body was received from"
+      "description": "Floor or ward within the hospital"
     },
     "source_contact": {
       "type": "string"
@@ -172,12 +172,92 @@
     },
     "notes": {
       "type": "string"
+    },
+    "is_donor": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Is the deceased a registered organ/tissue donor?"
+    },
+    "donor_registration_number": {
+      "type": "string"
+    },
+    "donor_card_verified": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ]
+    },
+    "donor_verification_method": {
+      "type": "string"
+    },
+    "donation_organization": {
+      "type": "string"
+    },
+    "donation_coordinator_name": {
+      "type": "string"
+    },
+    "donation_coordinator_contact": {
+      "type": "string"
+    },
+    "organs_for_donation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected organs: heart, lungs, liver, kidneys, pancreas, intestines, corneas, other"
+    },
+    "organs_other_specify": {
+      "type": "string"
+    },
+    "tissues_for_donation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected tissues: skin, bone, tendons, ligaments, heart_valves, veins, cartilage, other"
+    },
+    "tissues_other_specify": {
+      "type": "string"
+    },
+    "donation_status": {
+      "type": "string",
+      "enum": [
+        "pending_assessment",
+        "approved_for_recovery",
+        "recovery_scheduled",
+        "recovery_completed",
+        "declined",
+        "not_eligible"
+      ]
+    },
+    "recovery_team_assigned": {
+      "type": "string"
+    },
+    "recovery_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recovery_facility": {
+      "type": "string"
+    },
+    "donation_special_handling": {
+      "type": "string"
+    },
+    "donation_notes": {
+      "type": "string"
     }
   },
   "required": [
     "unique_id",
     "status",
     "arrival_datetime",
-    "source_type"
+    "source_type",
+    "is_donor"
   ]
 }

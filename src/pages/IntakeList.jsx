@@ -10,9 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   UserPlus, Search, Pencil, X, Check, Loader2,
-  AlertTriangle, ChevronRight, Filter, Warehouse, Clock
+  AlertTriangle, ChevronRight, Filter, Warehouse, Clock, Heart
 } from 'lucide-react';
 import { format } from 'date-fns';
+import DonorBadge from '@/components/DonorBadge';
 
 const TYPE_LABELS = {
   refrigerated_tray: 'Refrigerated',
@@ -156,6 +157,7 @@ export default function IntakeList() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [storageFilter, setStorageFilter] = useState('all'); // 'all' | 'assigned' | 'pending'
   const [storageTypeFilter, setStorageTypeFilter] = useState('all');
+  const [donorFilter, setDonorFilter] = useState('all'); // 'all' | 'donor' | 'non_donor'
   const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => {
@@ -198,16 +200,22 @@ export default function IntakeList() {
       storageTypeFilter === 'all' ||
       (unit && unit.unit_type === storageTypeFilter);
 
-    return matchSearch && matchStatus && matchStorage && matchStorageType;
+    const matchDonor =
+      donorFilter === 'all' ||
+      (donorFilter === 'donor' && d.is_donor === 'yes') ||
+      (donorFilter === 'non_donor' && d.is_donor !== 'yes');
+
+    return matchSearch && matchStatus && matchStorage && matchStorageType && matchDonor;
   });
 
   const pendingCount = decedents.filter(d => !d.storage_location_id && !d.storage_location_label).length;
+  const donorCount = decedents.filter(d => d.is_donor === 'yes').length;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader
         title="Intake List"
-        subtitle={`${decedents.length} total cases · ${pendingCount} storage pending`}
+        subtitle={`${decedents.length} total cases · ${pendingCount} storage pending · ${donorCount} donor cases`}
         actions={
           <Link to="/intake">
             <Button size="sm" className="gap-2">
@@ -260,22 +268,49 @@ export default function IntakeList() {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={donorFilter} onValueChange={setDonorFilter}>
+          <SelectTrigger className="w-40">
+            <Heart className="w-3.5 h-3.5 mr-1.5 text-red-400" />
+            <SelectValue placeholder="Donor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Cases</SelectItem>
+            <SelectItem value="donor">Donor Cases</SelectItem>
+            <SelectItem value="non_donor">Non-Donor</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Summary chips */}
-      {pendingCount > 0 && (
-        <button
-          onClick={() => setStorageFilter(storageFilter === 'pending' ? 'all' : 'pending')}
-          className={`mb-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-            storageFilter === 'pending'
-              ? 'bg-amber-500 text-white border-amber-500'
-              : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-          }`}
-        >
-          <Clock className="w-3 h-3" />
-          {pendingCount} awaiting storage assignment
-        </button>
-      )}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {pendingCount > 0 && (
+          <button
+            onClick={() => setStorageFilter(storageFilter === 'pending' ? 'all' : 'pending')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              storageFilter === 'pending'
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            <Clock className="w-3 h-3" />
+            {pendingCount} awaiting storage assignment
+          </button>
+        )}
+        {donorCount > 0 && (
+          <button
+            onClick={() => setDonorFilter(donorFilter === 'donor' ? 'all' : 'donor')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              donorFilter === 'donor'
+                ? 'bg-red-500 text-white border-red-500'
+                : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+            }`}
+          >
+            <Heart className="w-3 h-3" />
+            {donorCount} donor cases
+          </button>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
@@ -319,6 +354,7 @@ export default function IntakeList() {
                         <div className="flex flex-col gap-1">
                           <StatusBadge status={d.status} />
                           <StatusBadge status={d.identification_status} />
+                          <DonorBadge decedent={d} />
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">
