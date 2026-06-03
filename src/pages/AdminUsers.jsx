@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Users, UserPlus, X, Loader2, Check, Mail, Shield,
-  ShieldCheck, User, Stethoscope, Fingerprint, ClipboardList, Search
+  ShieldCheck, User, Stethoscope, Fingerprint, ClipboardList, Search,
+  Pencil, Trash2, AlertTriangle
 } from 'lucide-react';
 
 const ROLES = [
@@ -206,10 +207,145 @@ function InviteModal({ onClose, onInvited }) {
   );
 }
 
+function EditUserModal({ user, onClose, onSaved }) {
+  const [role, setRole] = useState(user.role || 'user');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await base44.entities.User.update(user.id, { role });
+    onSaved();
+    onClose();
+    setSaving(false);
+  };
+
+  const selectedRole = roleMap[role];
+  const RoleIcon = selectedRole?.icon || User;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
+            <Pencil className="w-4 h-4 text-primary" /> Edit Staff Member
+          </h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="text-sm font-semibold text-primary">
+                {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">{user.full_name || '—'}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label>Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="mt-1.5">
+                <div className="flex items-center gap-2">
+                  <RoleIcon className={`w-4 h-4 ${selectedRole?.color}`} />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map(r => {
+                  const Icon = r.icon;
+                  return (
+                    <SelectItem key={r.value} value={r.value}>
+                      <div className="flex items-center gap-2">
+                        <Icon className={`w-4 h-4 ${r.color}`} />
+                        <span>{r.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {selectedRole && (
+              <p className="mt-1.5 text-xs text-muted-foreground">{selectedRole.description}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-3 px-6 py-4 border-t">
+          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1 gap-2" onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            Save Changes
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ user, onClose, onDeleted }) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await base44.entities.User.delete(user.id);
+    onDeleted();
+    onClose();
+    setDeleting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive" /> Remove Staff Member
+          </h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="px-6 py-5">
+          <p className="text-sm text-muted-foreground mb-4">
+            Are you sure you want to remove <span className="font-semibold text-foreground">{user.full_name || user.email}</span> from the system? This action cannot be undone.
+          </p>
+          <div className="flex items-center gap-3 p-3 bg-destructive/5 border border-destructive/20 rounded-lg">
+            <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <span className="text-sm font-semibold text-destructive">
+                {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">{user.full_name || '—'}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 px-6 py-4 border-t">
+          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button variant="destructive" className="flex-1 gap-2" onClick={handleDelete} disabled={deleting}>
+            {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Remove User
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
 
@@ -311,6 +447,7 @@ export default function AdminUsers() {
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Email</th>
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Role</th>
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Joined</th>
+                <th className="text-right px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -331,6 +468,16 @@ export default function AdminUsers() {
                   <td className="px-5 py-3 text-xs text-muted-foreground">
                     {u.created_date ? new Date(u.created_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                   </td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditTarget(u)}>
+                        <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(u)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -342,10 +489,13 @@ export default function AdminUsers() {
       )}
 
       {showInvite && (
-        <InviteModal
-          onClose={() => setShowInvite(false)}
-          onInvited={loadUsers}
-        />
+        <InviteModal onClose={() => setShowInvite(false)} onInvited={loadUsers} />
+      )}
+      {editTarget && (
+        <EditUserModal user={editTarget} onClose={() => setEditTarget(null)} onSaved={loadUsers} />
+      )}
+      {deleteTarget && (
+        <DeleteConfirmModal user={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={loadUsers} />
       )}
     </div>
   );
