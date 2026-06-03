@@ -99,6 +99,11 @@ export default function Layout() {
           >
             <Menu className="w-5 h-5" />
           </button>
+          <img
+            src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/b77390598_CustiviantLogo4k.png"
+            alt="Custiviant"
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+          />
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <button className="relative p-2 rounded-full hover:bg-muted transition-colors">
