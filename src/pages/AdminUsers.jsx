@@ -75,22 +75,28 @@ function RoleBadge({ role }) {
 }
 
 function InviteModal({ onClose, onInvited }) {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('user');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
+  // Auto-generate a placeholder email from the username if the user types a name without @
+  const resolvedEmail = email.includes('@') ? email.trim().toLowerCase() : '';
+  const isEmailValid = resolvedEmail.length > 0 && resolvedEmail.includes('.');
+
   const handleInvite = async () => {
-    if (!email.trim()) return;
+    if (!isEmailValid) return;
     setSending(true);
     setError('');
     try {
-      await base44.users.inviteUser(email.trim().toLowerCase(), role);
+      await base44.users.inviteUser(resolvedEmail, role);
       setSent(true);
       onInvited();
       setTimeout(() => {
         setSent(false);
+        setFullName('');
         setEmail('');
         setRole('user');
       }, 1800);
@@ -108,7 +114,7 @@ function InviteModal({ onClose, onInvited }) {
       <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h3 className="font-semibold text-foreground flex items-center gap-2">
-            <UserPlus className="w-4 h-4 text-primary" /> Invite Staff Member
+            <UserPlus className="w-4 h-4 text-primary" /> Add Staff Member
           </h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
@@ -116,8 +122,23 @@ function InviteModal({ onClose, onInvited }) {
         </div>
 
         <div className="px-6 py-5 space-y-4">
+          {/* Full Name */}
           <div>
-            <Label>Email Address</Label>
+            <Label>Full Name <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <div className="relative mt-1.5">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="e.g. Dr. Jane Smith"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <Label>Email Address <span className="text-destructive">*</span></Label>
             <div className="relative mt-1.5">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -128,8 +149,12 @@ function InviteModal({ onClose, onInvited }) {
                 onKeyDown={e => e.key === 'Enter' && handleInvite()}
               />
             </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              An invitation link will be sent to this address. The staff member will set their own password.
+            </p>
           </div>
 
+          {/* Role */}
           <div>
             <Label>Staff Role</Label>
             <Select value={role} onValueChange={setRole}>
@@ -165,7 +190,7 @@ function InviteModal({ onClose, onInvited }) {
 
         <div className="flex gap-3 px-6 py-4 border-t">
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1 gap-2" onClick={handleInvite} disabled={sending || !email.trim()}>
+          <Button className="flex-1 gap-2" onClick={handleInvite} disabled={sending || !isEmailValid}>
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : sent ? (
