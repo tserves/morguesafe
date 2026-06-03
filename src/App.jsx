@@ -18,6 +18,7 @@ import AuditLog from '@/pages/AuditLog';
 import ScanLookup from '@/pages/ScanLookup';
 import DailyOverview from '@/pages/DailyOverview';
 import IntakeList from '@/pages/IntakeList.jsx';
+import AdminUsers from '@/pages/AdminUsers.jsx';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/release" element={<Release />} />
         <Route path="/audit" element={<AuditLog />} />
         <Route path="/scan" element={<ScanLookup />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

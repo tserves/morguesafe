@@ -4,7 +4,7 @@ import {
   LayoutDashboard, UserPlus, Shield, Warehouse, 
   FlaskConical, Package, LogOut, Menu, X, Bell,
   ChevronRight, Fingerprint, FileText, QrCode,
-  CalendarDays, ClipboardList
+  CalendarDays, ClipboardList, Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
@@ -21,6 +21,7 @@ const navItems = [
   { path: '/release', icon: LogOut, label: 'Release', color: 'text-red-400' },
   { path: '/scan', icon: QrCode, label: 'Scan / Lookup', color: 'text-emerald-400' },
   { path: '/audit', icon: FileText, label: 'Audit Logs', color: 'text-slate-400' },
+  { path: '/admin/users', icon: Users, label: 'Users', color: 'text-rose-400' },
 ];
 
 export default function Layout() {
