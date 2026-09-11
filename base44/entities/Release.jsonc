@@ -91,6 +91,15 @@
     },
     "notes": {
       "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "description": "Hospital where this release is processed"
     }
   },
   "required": [

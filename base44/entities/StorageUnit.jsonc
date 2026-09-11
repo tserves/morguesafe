@@ -50,6 +50,16 @@
     },
     "notes": {
       "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "default": "oakville",
+      "description": "Hospital this storage unit belongs to"
     }
   },
   "required": [

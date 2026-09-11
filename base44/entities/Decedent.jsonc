@@ -173,6 +173,26 @@
     "notes": {
       "type": "string"
     },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "default": "oakville",
+      "description": "Current hospital location of the decedent"
+    },
+    "originating_hospital": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "default": "oakville",
+      "description": "Hospital where the case originally entered the system"
+    },
     "is_donor": {
       "type": "string",
       "enum": [

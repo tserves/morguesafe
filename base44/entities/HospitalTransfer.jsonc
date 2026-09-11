@@ -1,0 +1,81 @@
+{
+  "name": "HospitalTransfer",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string",
+      "description": "ID of the decedent being transferred"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "decedent_name": {
+      "type": "string"
+    },
+    "from_hospital": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "description": "Hospital the case is being transferred from"
+    },
+    "to_hospital": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "description": "Hospital the case is being transferred to"
+    },
+    "transfer_datetime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the transfer was initiated"
+    },
+    "transferred_by": {
+      "type": "string",
+      "description": "User who initiated the transfer"
+    },
+    "received_by": {
+      "type": "string",
+      "description": "User who confirmed receipt at the destination hospital"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the inter-hospital transfer"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_transit",
+        "received",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Current state of the transfer"
+    },
+    "received_datetime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the destination hospital confirmed receipt"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "digital_signature": {
+      "type": "string",
+      "description": "Optional digital signature for custody handoff"
+    }
+  },
+  "required": [
+    "decedent_id",
+    "from_hospital",
+    "to_hospital",
+    "transfer_datetime",
+    "transferred_by"
+  ]
+}

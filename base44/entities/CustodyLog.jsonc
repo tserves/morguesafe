@@ -23,7 +23,8 @@
         "personal_effects_logged",
         "documentation_updated",
         "alert_raised",
-        "note_added"
+        "note_added",
+        "hospital_transfer"
       ]
     },
     "from_location": {
@@ -64,6 +65,15 @@
     },
     "flag_reason": {
       "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "description": "Hospital where this custody event occurred"
     }
   },
   "required": [

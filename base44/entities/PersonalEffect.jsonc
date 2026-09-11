@@ -73,6 +73,15 @@
     },
     "notes": {
       "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ],
+      "description": "Hospital where these personal effects are stored"
     }
   },
   "required": [

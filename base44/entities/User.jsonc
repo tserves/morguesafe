@@ -7,6 +7,33 @@
         "admin",
         "user"
       ]
+    },
+    "assigned_hospitals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "oakville",
+          "milton",
+          "georgetown"
+        ]
+      },
+      "description": "Hospitals this user is authorized to access",
+      "default": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "location_access_level": {
+      "type": "string",
+      "enum": [
+        "single",
+        "multiple",
+        "all"
+      ],
+      "default": "all",
+      "description": "Level of hospital location access for this user"
     }
   },
   "required": [

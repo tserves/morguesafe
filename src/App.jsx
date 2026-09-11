@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
+import { LocationProvider } from '@/lib/LocationContext';
 import Dashboard from '@/pages/Dashboard';
 import BodyIntake from '@/pages/BodyIntake.jsx';
 import DecedentDetail from '@/pages/DecedentDetail.jsx';
@@ -70,7 +71,9 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          <LocationProvider>
+            <AuthenticatedApp />
+          </LocationProvider>
         </Router>
         <Toaster />
       </QueryClientProvider>
