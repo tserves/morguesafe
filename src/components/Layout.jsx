@@ -4,7 +4,7 @@ import {
   LayoutDashboard, UserPlus, Shield, Warehouse, 
   FlaskConical, Package, LogOut, Menu, X, Bell,
   ChevronRight, Fingerprint, FileText, QrCode,
-  CalendarDays, ClipboardList, Users
+  CalendarDays, ClipboardList, Users, Brain, ListChecks, Bot, ScrollText, Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
@@ -23,6 +23,11 @@ const navItems = [
   { path: '/release', icon: LogOut, label: 'Release', color: 'text-red-400' },
   { path: '/scan', icon: QrCode, label: 'Scan / Lookup', color: 'text-emerald-400' },
   { path: '/audit', icon: FileText, label: 'Audit Logs', color: 'text-slate-400' },
+  { path: '/ai-command', icon: Brain, label: 'AI Command Centre', color: 'text-purple-400' },
+  { path: '/ai-tasks', icon: ListChecks, label: 'AI Tasks', color: 'text-violet-400' },
+  { path: '/ai-assistant', icon: Bot, label: 'AI Assistant', color: 'text-fuchsia-400' },
+  { path: '/ai-activity', icon: ScrollText, label: 'AI Activity', color: 'text-indigo-400' },
+  { path: '/ai-settings', icon: Settings, label: 'AI Settings', color: 'text-sky-400' },
   { path: '/admin/users', icon: Users, label: 'Users', color: 'text-rose-400' },
 ];
 

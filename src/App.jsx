@@ -20,6 +20,11 @@ import ScanLookup from '@/pages/ScanLookup';
 import DailyOverview from '@/pages/DailyOverview';
 import IntakeList from '@/pages/IntakeList.jsx';
 import AdminUsers from '@/pages/AdminUsers.jsx';
+import AICommandCentre from '@/pages/AICommandCentre.jsx';
+import AITasks from '@/pages/AITasks.jsx';
+import AIAssistant from '@/pages/AIAssistant.jsx';
+import AIActivity from '@/pages/AIActivity.jsx';
+import AISettings from '@/pages/AISettings.jsx';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,6 +65,11 @@ const AuthenticatedApp = () => {
         <Route path="/audit" element={<AuditLog />} />
         <Route path="/scan" element={<ScanLookup />} />
         <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/ai-command" element={<AICommandCentre />} />
+        <Route path="/ai-tasks" element={<AITasks />} />
+        <Route path="/ai-assistant" element={<AIAssistant />} />
+        <Route path="/ai-activity" element={<AIActivity />} />
+        <Route path="/ai-settings" element={<AISettings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

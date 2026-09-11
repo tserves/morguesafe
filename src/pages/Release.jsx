@@ -12,6 +12,7 @@ import {
   Shield, FileText, User
 } from 'lucide-react';
 import { format } from 'date-fns';
+import ReleaseReadinessCheck from '@/components/ai/ReleaseReadinessCheck';
 
 function generateReceiptNumber() {
   return `RCP-${Date.now().toString(36).toUpperCase()}`;
@@ -134,6 +135,11 @@ export default function Release() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="sm:col-span-2">
+              {form.decedent_id && (
+                <ReleaseReadinessCheck decedentId={form.decedent_id} decedentUniqueId={decedents.find(d => d.id === form.decedent_id)?.unique_id || ''} />
+              )}
             </div>
             <div>
               <Label>Release Type *</Label>

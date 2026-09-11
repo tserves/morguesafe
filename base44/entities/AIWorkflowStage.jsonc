@@ -1,0 +1,104 @@
+{
+  "name": "AIWorkflowStage",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "identity_verification",
+        "documentation",
+        "storage_assignment",
+        "internal_reviews",
+        "transfer_coordination",
+        "release_authorization",
+        "final_release",
+        "case_closure"
+      ]
+    },
+    "stage_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "blocked",
+        "skipped"
+      ],
+      "default": "not_started"
+    },
+    "stage_order": {
+      "type": "number",
+      "description": "Order in the workflow sequence"
+    },
+    "started_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "blocked_reason": {
+      "type": "string"
+    },
+    "assigned_department": {
+      "type": "string"
+    },
+    "assigned_user": {
+      "type": "string"
+    },
+    "checklist_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          },
+          "completed_by": {
+            "type": "string"
+          },
+          "completed_datetime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "special_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Religious, cultural, infection-control, or family requirements"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "decedent_id",
+    "stage",
+    "stage_status"
+  ]
+}

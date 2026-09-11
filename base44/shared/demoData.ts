@@ -1,4 +1,4 @@
-const DEMO_ENTITIES = ['Decedent', 'PersonalEffect', 'StorageUnit', 'CustodyLog', 'Examination', 'Release', 'HospitalTransfer'];
+const DEMO_ENTITIES = ['Decedent', 'PersonalEffect', 'StorageUnit', 'CustodyLog', 'Examination', 'Release', 'HospitalTransfer', 'AITask', 'AIAlert', 'AIWorkflowStage', 'AIActivityLog', 'CaseSummary', 'ShiftBriefing', 'AISettings'];
 
 export async function countDemoData(base44) {
   const counts = {};
@@ -15,7 +15,7 @@ export async function countDemoData(base44) {
 
 export async function deleteDemoData(base44) {
   const deleted = {};
-  const deleteOrder = ['PersonalEffect', 'CustodyLog', 'Examination', 'Release', 'HospitalTransfer', 'Decedent', 'StorageUnit'];
+  const deleteOrder = ['AITask', 'AIAlert', 'AIWorkflowStage', 'AIActivityLog', 'CaseSummary', 'ShiftBriefing', 'AISettings', 'PersonalEffect', 'CustodyLog', 'Examination', 'Release', 'HospitalTransfer', 'Decedent', 'StorageUnit'];
   for (const entity of deleteOrder) {
     let count = 0;
     const demoRecords = await base44.entities[entity].filter({ is_demo_data: true }, undefined, 1000);
@@ -225,8 +225,95 @@ export async function generateDemoData(base44, user) {
   if (decompUnit) unitUpdates.push({ id: decompUnit.id, status: 'maintenance', notes: 'Scheduled maintenance - temperature calibration' });
   if (unitUpdates.length > 0) await base44.entities.StorageUnit.bulkUpdate(unitUpdates);
 
+  // === AI Workflow Data ===
+  const aiTasks = [];
+  const aiAlerts = [];
+  const aiActivityLogs = [];
+  const aiWorkflowStages = [];
+  const stageOrder = ['intake', 'identity_verification', 'documentation', 'storage_assignment', 'internal_reviews', 'transfer_coordination', 'release_authorization', 'final_release', 'case_closure'];
+  const nowISO = new Date().toISOString();
+
+  for (const d of decedentDefs) {
+    const decedent = decByUid(d.uid);
+    if (!decedent) continue;
+    const name = d.firstName && d.firstName !== 'Unidentified' ? `${d.firstName} ${d.lastName}` : 'Unidentified';
+
+    // Generate workflow stages
+    const currentStageMap = { intake: 'intake', storage: 'storage_assignment', examination: 'internal_reviews', holding: 'transfer_coordination', released: 'final_release', transferred: 'transfer_coordination' };
+    const currentStage = currentStageMap[d.status] || 'intake';
+    const currentOrder = stageOrder.indexOf(currentStage) + 1;
+    for (const stage of stageOrder) {
+      const order = stageOrder.indexOf(stage) + 1;
+      let stageStatus = 'not_started';
+      if (stage === currentStage) stageStatus = 'in_progress';
+      if (order < currentOrder) stageStatus = 'completed';
+      aiWorkflowStages.push({
+        decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, stage, stage_status: stageStatus, stage_order: order,
+        hospital_location: d.hospitalLoc, is_demo_data: true,
+      });
+    }
+
+    // Generate AI tasks based on case conditions
+    if (!d.documentationComplete) {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Complete required documentation', task_description: 'Case documentation has not been marked as complete.', task_type: 'document_review', priority: 'high', status: 'new', reason: 'Documentation completeness flag is not set', assigned_department: 'Administration', due_datetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+      aiActivityLogs.push({ action_type: 'task_generated', decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, user_name: 'AI Engine', hospital_location: d.hospitalLoc, ai_action: 'Generated task: Complete required documentation', staff_decision: 'pending', timestamp: nowISO, is_demo_data: true });
+    }
+    if (!d.storageLabel && d.status !== 'released') {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Assign storage location', task_description: 'This case does not have a confirmed storage assignment.', task_type: 'storage_unconfirmed', priority: 'high', status: 'new', reason: 'No storage location has been assigned', assigned_department: 'Storage', due_datetime: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+      aiAlerts.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, alert_type: 'incomplete_intake', alert_level: 'attention', title: 'Storage not assigned', message: `Case ${decedent.unique_id} has no confirmed storage location.`, status: 'active', hospital_location: d.hospitalLoc, is_demo_data: true });
+    }
+    if (d.identStatus === 'unidentified') {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Initiate enhanced identity verification', task_description: 'Decedent is unidentified. Enhanced verification procedures should be initiated.', task_type: 'missing_info', priority: 'high', status: 'new', reason: 'Decedent identification status is unidentified', assigned_department: 'Intake', due_datetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+      aiAlerts.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, alert_type: 'missing_identification', alert_level: 'urgent', title: 'Unidentified decedent', message: `Case ${decedent.unique_id} remains unidentified.`, status: 'active', hospital_location: d.hospitalLoc, is_demo_data: true });
+    }
+    if (d.flags?.includes('coroner_case')) {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Obtain coroner authorization', task_description: 'Coroner authorization is required before release.', task_type: 'coroner_followup', priority: 'critical', status: 'new', reason: 'Coroner case requires authorization', assigned_department: 'Release', due_datetime: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+      aiAlerts.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, alert_type: 'coroner_pending', alert_level: 'urgent', title: 'Coroner authorization pending', message: `Case ${decedent.unique_id} requires coroner authorization.`, status: 'active', hospital_location: d.hospitalLoc, is_demo_data: true });
+    }
+    if (d.isDonor === 'yes' && d.donationStatus === 'pending_assessment') {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Complete donation assessment', task_description: 'Organ/tissue donation assessment has not been completed.', task_type: 'donation_followup', priority: 'high', status: 'new', reason: 'Donation assessment is pending', assigned_department: 'Pathology', due_datetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+      aiAlerts.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, alert_type: 'donation_pending', alert_level: 'attention', title: 'Donation assessment pending', message: `Case ${decedent.unique_id} has a pending donation assessment.`, status: 'active', hospital_location: d.hospitalLoc, is_demo_data: true });
+    }
+    // Prolonged stay for older cases
+    if (d.arrival) {
+      const daysSince = (Date.now() - new Date(d.arrival).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince > 7 && d.status !== 'released') {
+        aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Review prolonged length of stay', task_description: `Case has been active for ${Math.round(daysSince)} days.`, task_type: 'stage_delay', priority: 'medium', status: 'new', reason: `Case active for ${Math.round(daysSince)} days`, assigned_department: 'Administration', due_datetime: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+        aiAlerts.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, alert_type: 'prolonged_stay', alert_level: 'attention', title: 'Prolonged length of stay', message: `Case ${decedent.unique_id} has been in the morgue for ${Math.round(daysSince)} days.`, status: 'active', hospital_location: d.hospitalLoc, is_demo_data: true });
+      }
+    }
+    // Overdue task for missing next of kin
+    if (!d.nokName && d.identStatus !== 'unidentified') {
+      aiTasks.push({ decedent_id: decedent.id, decedent_unique_id: decedent.unique_id, decedent_name: name, task_title: 'Record next of kin information', task_description: 'Next of kin name and contact are required for release coordination.', task_type: 'missing_info', priority: 'high', status: 'new', reason: 'Next of kin information is missing', assigned_department: 'Administration', due_datetime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), hospital_location: d.hospitalLoc, generated_by_ai: true, is_demo_data: true });
+    }
+  }
+
+  // Storage capacity alert for hospitals near capacity
+  for (const hosp of ['oakville', 'milton', 'georgetown']) {
+    const hospUnits = storageUnits.filter(u => u.hospital_location === hosp);
+    const occupied = hospUnits.filter(u => u.status === 'occupied').length;
+    if (hospUnits.length > 0 && occupied / hospUnits.length > 0.7) {
+      aiAlerts.push({ alert_type: 'storage_capacity', alert_level: 'urgent', title: 'Storage capacity concern', message: `${occupied}/${hospUnits.length} storage units occupied at ${hosp} (${Math.round((occupied / hospUnits.length) * 100)}%).`, status: 'active', hospital_location: hosp, is_demo_data: true });
+    }
+  }
+
+  if (aiTasks.length > 0) await base44.entities.AITask.bulkCreate(aiTasks);
+  if (aiAlerts.length > 0) await base44.entities.AIAlert.bulkCreate(aiAlerts);
+  if (aiActivityLogs.length > 0) await base44.entities.AIActivityLog.bulkCreate(aiActivityLogs);
+  if (aiWorkflowStages.length > 0) await base44.entities.AIWorkflowStage.bulkCreate(aiWorkflowStages);
+
+  // Create default AI settings
+  await base44.entities.AISettings.create({
+    hospital_location: 'all',
+    features: { workflow_engine: true, case_summary: true, document_processing: true, task_management: true, smart_alerts: true, release_readiness: true, shift_briefing: true, conversational_assistant: true },
+    thresholds: { stage_delay_hours: 24, prolonged_stay_days: 7, task_escalation_hours: 48, release_reminder_hours: 24, transfer_acknowledgment_hours: 4 },
+    notification_preferences: { email_alerts: true, in_app_alerts: true, escalation_emails: true, daily_digest: false },
+    updated_by: 'System',
+    updated_datetime: nowISO,
+  });
+
   return {
-    created: { StorageUnit: storageUnits.length, Decedent: decedents.length, CustodyLog: custodyLogs.length, PersonalEffect: personalEffects.length, Examination: examinations.length, Release: releases.length, HospitalTransfer: transfers.length },
-    total: storageUnits.length + decedents.length + custodyLogs.length + personalEffects.length + examinations.length + releases.length + transfers.length,
+    created: { StorageUnit: storageUnits.length, Decedent: decedents.length, CustodyLog: custodyLogs.length, PersonalEffect: personalEffects.length, Examination: examinations.length, Release: releases.length, HospitalTransfer: transfers.length, AITask: aiTasks.length, AIAlert: aiAlerts.length, AIWorkflowStage: aiWorkflowStages.length, AIActivityLog: aiActivityLogs.length },
+    total: storageUnits.length + decedents.length + custodyLogs.length + personalEffects.length + examinations.length + releases.length + transfers.length + aiTasks.length + aiAlerts.length + aiWorkflowStages.length + aiActivityLogs.length,
   };
 }

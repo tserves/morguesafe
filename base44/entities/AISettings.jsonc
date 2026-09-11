@@ -1,0 +1,123 @@
+{
+  "name": "AISettings",
+  "type": "object",
+  "properties": {
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown",
+        "all"
+      ],
+      "default": "all"
+    },
+    "features": {
+      "type": "object",
+      "description": "Toggle for each AI feature",
+      "properties": {
+        "workflow_engine": {
+          "type": "boolean",
+          "default": true
+        },
+        "case_summary": {
+          "type": "boolean",
+          "default": true
+        },
+        "document_processing": {
+          "type": "boolean",
+          "default": true
+        },
+        "task_management": {
+          "type": "boolean",
+          "default": true
+        },
+        "smart_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "release_readiness": {
+          "type": "boolean",
+          "default": true
+        },
+        "shift_briefing": {
+          "type": "boolean",
+          "default": true
+        },
+        "conversational_assistant": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Configurable thresholds per hospital",
+      "properties": {
+        "stage_delay_hours": {
+          "type": "number",
+          "default": 24
+        },
+        "prolonged_stay_days": {
+          "type": "number",
+          "default": 7
+        },
+        "task_escalation_hours": {
+          "type": "number",
+          "default": 48
+        },
+        "release_reminder_hours": {
+          "type": "number",
+          "default": 24
+        },
+        "transfer_acknowledgment_hours": {
+          "type": "number",
+          "default": 4
+        }
+      }
+    },
+    "notification_preferences": {
+      "type": "object",
+      "properties": {
+        "email_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "in_app_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "escalation_emails": {
+          "type": "boolean",
+          "default": true
+        },
+        "daily_digest": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "required_workflow_steps": {
+      "type": "object",
+      "description": "Which workflow steps are required vs optional per hospital"
+    },
+    "release_readiness_rules": {
+      "type": "object",
+      "description": "Custom release readiness rules"
+    },
+    "hospital_exceptions": {
+      "type": "object",
+      "description": "Hospital-specific exceptions to standard workflow"
+    },
+    "updated_by": {
+      "type": "string"
+    },
+    "updated_datetime": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "hospital_location"
+  ]
+}

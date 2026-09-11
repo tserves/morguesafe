@@ -14,6 +14,10 @@ import LabelPrintModal from '@/components/LabelPrintModal';
 import DonorBadge from '@/components/DonorBadge';
 import HospitalBadge from '@/components/HospitalBadge';
 import HospitalTransferModal from '@/components/HospitalTransferModal';
+import WorkflowStages from '@/components/ai/WorkflowStages';
+import CaseSummaryModal from '@/components/ai/CaseSummaryModal';
+import ReleaseReadinessCheck from '@/components/ai/ReleaseReadinessCheck';
+import { Sparkles } from 'lucide-react';
 import { getHospital, displayCaseId } from '@/lib/hospitals';
 import { format } from 'date-fns';
 
@@ -33,6 +37,8 @@ export default function DecedentDetail() {
   const [showLabel, setShowLabel] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transfers, setTransfers] = useState([]);
+  const [showSummary, setShowSummary] = useState(false);
+  const [workflowStages, setWorkflowStages] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -49,6 +55,7 @@ export default function DecedentDetail() {
       setTransfers(tr.sort((a,b) => new Date(b.transfer_datetime) - new Date(a.transfer_datetime)));
       setLoading(false);
     });
+    base44.entities.AIWorkflowStage.filter({ decedent_id: id }).then(setWorkflowStages);
   }, [id]);
 
   const handleStatusMove = async (newStatus) => {
@@ -135,6 +142,9 @@ export default function DecedentDetail() {
           </div>
           <h1 className="text-xl font-semibold">{name}</h1>
         </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowSummary(true)}>
+          <Sparkles className="w-3.5 h-3.5 text-purple-500" /> AI Summary
+        </Button>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowTransfer(true)}>
           <ArrowLeftRight className="w-3.5 h-3.5" /> Transfer
         </Button>
@@ -379,6 +389,24 @@ export default function DecedentDetail() {
         {showLabel && <LabelPrintModal decedent={decedent} onClose={() => setShowLabel(false)} />}
 
         {showTransfer && <HospitalTransferModal decedent={decedent} onClose={() => setShowTransfer(false)} onTransferred={handleTransferred} />}
+
+        <CaseSummaryModal decedentId={id} decedentUniqueId={displayCaseId(decedent.unique_id, decedent.hospital_location)} open={showSummary} onOpenChange={setShowSummary} />
+
+      {/* AI Workflow Stages */}
+        <div className="bg-card border rounded-xl p-5 h-fit">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-500" /> AI Workflow Stages
+          </h2>
+          <WorkflowStages stages={workflowStages} />
+        </div>
+
+        {/* Release Readiness Check */}
+        <div className="bg-card border rounded-xl p-5 h-fit">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+            <Shield className="w-4 h-4" /> Release Readiness
+          </h2>
+          <ReleaseReadinessCheck decedentId={id} decedentUniqueId={displayCaseId(decedent.unique_id, decedent.hospital_location)} />
+        </div>
 
       {/* Chain of Custody Timeline */}
         <div className="bg-card border rounded-xl p-5 h-fit">

@@ -1,0 +1,127 @@
+{
+  "name": "ShiftBriefing",
+  "type": "object",
+  "properties": {
+    "briefing_type": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "shift_handoff",
+        "custom"
+      ],
+      "default": "shift_handoff"
+    },
+    "briefing_text": {
+      "type": "string",
+      "description": "Full AI-generated briefing text"
+    },
+    "briefing_data": {
+      "type": "object",
+      "description": "Structured briefing data",
+      "properties": {
+        "new_cases": {
+          "type": "number"
+        },
+        "released_cases": {
+          "type": "number"
+        },
+        "scheduled_releases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "active_holds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "urgent_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overdue_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_docs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "follow_ups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transfers_in_progress": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capacity_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "previous_shift_changes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown",
+        "all"
+      ]
+    },
+    "generated_by": {
+      "type": "string"
+    },
+    "generated_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "saved",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "briefing_type",
+    "briefing_text",
+    "generated_datetime"
+  ]
+}

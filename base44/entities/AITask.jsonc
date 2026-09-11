@@ -1,0 +1,128 @@
+{
+  "name": "AITask",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string",
+      "description": "Related decedent case ID"
+    },
+    "decedent_unique_id": {
+      "type": "string",
+      "description": "Display case ID (hospital-prefixed)"
+    },
+    "decedent_name": {
+      "type": "string"
+    },
+    "task_title": {
+      "type": "string"
+    },
+    "task_description": {
+      "type": "string"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "missing_info",
+        "document_review",
+        "stage_delay",
+        "authorization_required",
+        "transfer_approaching",
+        "release_approaching",
+        "discrepancy",
+        "storage_unconfirmed",
+        "handoff_unacknowledged",
+        "donation_followup",
+        "coroner_followup",
+        "other"
+      ],
+      "default": "other"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "User ID of assigned staff member"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "assigned_department": {
+      "type": "string",
+      "description": "Department name (e.g., Intake, Pathology, Release)"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "due_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "assigned",
+        "in_progress",
+        "waiting",
+        "blocked",
+        "completed",
+        "escalated",
+        "cancelled"
+      ],
+      "default": "new"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why the AI generated this task"
+    },
+    "escalation_level": {
+      "type": "number",
+      "default": 0
+    },
+    "completion_notes": {
+      "type": "string"
+    },
+    "completion_evidence": {
+      "type": "string",
+      "description": "Evidence of completion (reference, signature, etc.)"
+    },
+    "dismissal_reason": {
+      "type": "string",
+      "description": "Required when an AI task is dismissed"
+    },
+    "dismissed_by": {
+      "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "generated_by_ai": {
+      "type": "boolean",
+      "default": true
+    },
+    "ai_action_id": {
+      "type": "string",
+      "description": "Reference to AIActivityLog entry"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "task_title",
+    "task_type",
+    "priority",
+    "status"
+  ]
+}

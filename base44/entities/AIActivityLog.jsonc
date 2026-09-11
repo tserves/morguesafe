@@ -1,0 +1,86 @@
+{
+  "name": "AIActivityLog",
+  "type": "object",
+  "properties": {
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "recommendation",
+        "task_generated",
+        "alert_raised",
+        "summary_generated",
+        "briefing_generated",
+        "document_processed",
+        "release_check",
+        "assistant_query",
+        "workflow_update",
+        "escalation",
+        "task_dismissed",
+        "task_completed",
+        "alert_acknowledged"
+      ]
+    },
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "ai_action": {
+      "type": "string",
+      "description": "What the AI did"
+    },
+    "ai_recommendation": {
+      "type": "string",
+      "description": "What the AI recommended"
+    },
+    "information_used": {
+      "type": "string",
+      "description": "Summary of data the AI used"
+    },
+    "suggested_change": {
+      "type": "string"
+    },
+    "staff_decision": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "rejected",
+        "pending",
+        "modified",
+        "not_required"
+      ]
+    },
+    "final_action": {
+      "type": "string",
+      "description": "What action was ultimately taken"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "action_type",
+    "ai_action",
+    "timestamp"
+  ]
+}

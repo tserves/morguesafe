@@ -1,0 +1,120 @@
+{
+  "name": "CaseSummary",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "summary_text": {
+      "type": "string",
+      "description": "Full AI-generated summary text"
+    },
+    "summary_data": {
+      "type": "object",
+      "description": "Structured summary data (status, stages, tasks, holds, etc.)",
+      "properties": {
+        "current_status": {
+          "type": "string"
+        },
+        "hospital": {
+          "type": "string"
+        },
+        "storage_location": {
+          "type": "string"
+        },
+        "completed_stages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outstanding_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_documents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "active_holds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "responsible_departments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "latest_activity": {
+          "type": "string"
+        },
+        "time_at_current_stage": {
+          "type": "string"
+        },
+        "recommended_next_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "release_blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "generated_by": {
+      "type": "string"
+    },
+    "generated_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "shared",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "decedent_id",
+    "summary_text",
+    "generated_datetime"
+  ]
+}

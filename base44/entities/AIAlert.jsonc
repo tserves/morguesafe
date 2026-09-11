@@ -1,0 +1,85 @@
+{
+  "name": "AIAlert",
+  "type": "object",
+  "properties": {
+    "decedent_id": {
+      "type": "string"
+    },
+    "decedent_unique_id": {
+      "type": "string"
+    },
+    "alert_type": {
+      "type": "string",
+      "enum": [
+        "incomplete_intake",
+        "missing_identification",
+        "duplicate_risk",
+        "storage_capacity",
+        "prolonged_stay",
+        "missing_release_auth",
+        "doc_discrepancy",
+        "unacknowledged_transfer",
+        "upcoming_release",
+        "overdue_task",
+        "case_on_hold",
+        "release_blocked",
+        "coroner_pending",
+        "donation_pending"
+      ]
+    },
+    "alert_level": {
+      "type": "string",
+      "enum": [
+        "informational",
+        "attention",
+        "urgent",
+        "critical"
+      ],
+      "default": "informational"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "acknowledged",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "active"
+    },
+    "acknowledged_by": {
+      "type": "string"
+    },
+    "acknowledged_datetime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_notes": {
+      "type": "string"
+    },
+    "hospital_location": {
+      "type": "string",
+      "enum": [
+        "oakville",
+        "milton",
+        "georgetown"
+      ]
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "alert_type",
+    "alert_level",
+    "title",
+    "status"
+  ]
+}
