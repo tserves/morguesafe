@@ -82,6 +82,21 @@ export function filterByLocation(items, location, field = 'hospital_location') {
  * Count records by hospital location.
  * Returns { oakville: n, milton: n, georgetown: n, all: total }
  */
+/**
+ * Convert a stored unique_id (e.g. "MS-2026-1001") to a hospital-relevant
+ * display ID by swapping the "MS" prefix for the hospital code
+ * (e.g. "OTMH-2026-1001", "MDH-2026-1001", "GH-2026-1001").
+ */
+export function displayCaseId(uniqueId, hospitalLocation) {
+  if (!uniqueId) return '—';
+  const hospital = HOSPITALS[hospitalLocation];
+  if (!hospital) return uniqueId;
+  if (uniqueId.startsWith('MS-')) {
+    return hospital.code + '-' + uniqueId.slice(3);
+  }
+  return uniqueId;
+}
+
 export function countByLocation(items, field = 'hospital_location') {
   const counts = { oakville: 0, milton: 0, georgetown: 0, all: items.length };
   items.forEach(item => {

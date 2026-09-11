@@ -17,7 +17,7 @@ import DonorBadge from '@/components/DonorBadge';
 import StoragePicker from '@/components/StoragePicker';
 import HospitalBadge from '@/components/HospitalBadge';
 import { useLocation } from '@/lib/LocationContext';
-import { filterByLocation, HOSPITAL_LIST } from '@/lib/hospitals';
+import { filterByLocation, HOSPITAL_LIST, displayCaseId } from '@/lib/hospitals';
 
 const TYPE_LABELS = {
   refrigerated_tray: 'Refrigerated',
@@ -104,7 +104,7 @@ function EditModal({ decedent, onSave, onClose }) {
       <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div>
-            <p className="font-mono text-xs text-muted-foreground">{decedent.unique_id}</p>
+            <p className="font-mono text-xs text-muted-foreground">{displayCaseId(decedent.unique_id, decedent.hospital_location)}</p>
             <h3 className="font-semibold text-foreground">
               {decedent.first_name ? `${decedent.first_name} ${decedent.last_name || ''}`.trim() : 'Unidentified Decedent'}
             </h3>
@@ -439,7 +439,7 @@ export default function IntakeList() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           {d.flags?.length > 0 && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
-                          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{d.unique_id}</span>
+                          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{displayCaseId(d.unique_id, d.hospital_location)}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
