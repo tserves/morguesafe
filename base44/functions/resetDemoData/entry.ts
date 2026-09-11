@@ -19,7 +19,7 @@ export default async function(req: Request): Promise<Response> {
       verification_method: 'digital_signature', location: 'System', is_demo_data: false,
     });
 
-    return Response.json({ success: true, deleted, created, resetBy: user.full_name || user.email, resetAt: new Date().toISOString() });
+    return Response.json({ success: true, deleted, created: created.created, totalCreated: created.total, resetBy: user.full_name || user.email, resetAt: new Date().toISOString() });
   } catch (error) {
     try {
       const base44 = createClientFromRequest(req);

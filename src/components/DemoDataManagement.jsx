@@ -221,6 +221,10 @@ export default function DemoDataManagement() {
                       <span className="font-medium text-foreground">{count}</span>
                     </div>
                   ))}
+                  <div className="flex justify-between text-xs border-t pt-1 mt-1">
+                    <span className="font-medium text-foreground">Total</span>
+                    <span className="font-bold text-foreground">{success.totalCreated}</span>
+                  </div>
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground">This action has been recorded in the administrative audit log.</p>
