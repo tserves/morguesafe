@@ -14,7 +14,7 @@ import LabelPrintModal from '@/components/LabelPrintModal';
 import DonorBadge from '@/components/DonorBadge';
 import HospitalBadge from '@/components/HospitalBadge';
 import HospitalTransferModal from '@/components/HospitalTransferModal';
-import { getHospital } from '@/lib/hospitals';
+import { getHospital, displayCaseId } from '@/lib/hospitals';
 import { format } from 'date-fns';
 
 const STATUS_FLOW = ['intake', 'storage', 'examination', 'holding', 'released'];
@@ -127,7 +127,7 @@ export default function DecedentDetail() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span className="font-mono text-sm bg-muted px-2 py-0.5 rounded text-muted-foreground">{decedent.unique_id}</span>
+            <span className="font-mono text-sm bg-muted px-2 py-0.5 rounded text-muted-foreground">{displayCaseId(decedent.unique_id, decedent.hospital_location)}</span>
             <StatusBadge status={decedent.status} />
             <StatusBadge status={decedent.identification_status} />
             <DonorBadge decedent={decedent} />
@@ -161,7 +161,7 @@ export default function DecedentDetail() {
                 ['Source', `${decedent.source_name || ''} (${decedent.source_type?.replace('_',' ') || '—'})`],
                 ['Arrival', decedent.arrival_datetime ? format(new Date(decedent.arrival_datetime), 'MMM d, yyyy HH:mm') : '—'],
                 ['Condition', decedent.condition_on_arrival?.replace('_',' ') || '—'],
-                ['Case #', decedent.case_number || '—'],
+                ['Case #', displayCaseId(decedent.case_number, decedent.hospital_location) || '—'],
                 ['L.E. Case', decedent.law_enforcement_case || '—'],
                 ['Autopsy Required', decedent.requires_autopsy ? 'Yes' : 'No'],
                 ['Hospital Location', getHospital(decedent.hospital_location)?.short || '—'],

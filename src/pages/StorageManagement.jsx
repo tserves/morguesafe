@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import HospitalBadge from '@/components/HospitalBadge';
 import { useLocation } from '@/lib/LocationContext';
-import { filterByLocation, HOSPITAL_LIST } from '@/lib/hospitals';
+import { filterByLocation, HOSPITAL_LIST, displayCaseId } from '@/lib/hospitals';
 
 export default function StorageManagement() {
   const [units, setUnits] = useState([]);
@@ -67,6 +67,59 @@ export default function StorageManagement() {
   const totalCapacity = fUnits.reduce((a, u) => a + (u.capacity || 0), 0);
   const totalOccupied = fUnits.reduce((a, u) => a + (u.current_occupancy || 0), 0);
   const occupancyPct = totalCapacity ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
+
+  const renderRoom = (room, roomUnits) => (
+    <div key={room}>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+        <Warehouse className="w-4 h-4" />{room}
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {roomUnits.map(unit => {
+          const occ = unit.current_occupancy || 0;
+          const cap = unit.capacity || 1;
+          const pct = Math.round((occ / cap) * 100);
+          const isFull = occ >= cap;
+          const isNearFull = pct >= 80;
+          return (
+            <div key={unit.id} className={`border rounded-xl p-4 transition-all ${isFull ? 'bg-red-50 border-red-200' : isNearFull ? 'bg-amber-50 border-amber-200' : 'bg-card hover:border-primary/30'}`}>
+              <div className="flex items-start justify-between mb-2">
+                <StatusBadge status={unit.status} />
+                {isFull && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                {!isFull && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
+              </div>
+              <p className="text-sm font-semibold mt-2 leading-tight">{unit.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 capitalize">{unit.unit_type?.replace(/_/g,' ')}</p>
+              <div className="mt-3 space-y-1.5">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{occ} / {cap}</span>
+                  {unit.temperature_celsius !== undefined && <span className="flex items-center gap-0.5"><Thermometer className="w-3 h-3" />{unit.temperature_celsius}°C</span>}
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${isFull ? 'bg-red-500' : isNearFull ? 'bg-amber-500' : 'bg-green-500'}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+              {(() => {
+                const occupant = decedents.find(d => d.storage_location_label === unit.label && d.status !== 'released' && d.status !== 'transferred');
+                if (!occupant) return null;
+                const oName = occupant.first_name ? `${occupant.first_name} ${occupant.last_name || ''}`.trim() : 'Unidentified';
+                return (
+                  <div className="mt-3 pt-2.5 border-t border-dashed">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <User className="w-3 h-3 text-muted-foreground" />
+                      <span className="font-mono text-[10px] text-muted-foreground">{displayCaseId(occupant.unique_id, occupant.hospital_location)}</span>
+                    </div>
+                    <p className="text-xs font-medium text-foreground truncate">{oName}</p>
+                    {occupant.identification_status === 'unidentified' && <p className="text-[10px] text-amber-600 flex items-center gap-0.5 mt-0.5"><AlertTriangle className="w-2.5 h-2.5" /> Unidentified</p>}
+                    <Link to={`/decedent/${occupant.id}`} className="text-[10px] text-primary hover:underline flex items-center gap-0.5 mt-1">View case <ArrowRight className="w-2.5 h-2.5" /></Link>
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -172,86 +225,29 @@ export default function StorageManagement() {
         </div>
       ) : (
         <div className="space-y-6">
-          {Object.entries(byRoom).map(([room, roomUnits]) => (
-            <div key={room}>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                <Warehouse className="w-4 h-4" />{room}
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {roomUnits.map(unit => {
-                  const occ = unit.current_occupancy || 0;
-                  const cap = unit.capacity || 1;
-                  const pct = Math.round((occ / cap) * 100);
-                  const isFull = occ >= cap;
-                  const isNearFull = pct >= 80;
-
-                  return (
-                    <div
-                      key={unit.id}
-                      className={`border rounded-xl p-4 transition-all ${
-                        isFull ? 'bg-red-50 border-red-200' :
-                        isNearFull ? 'bg-amber-50 border-amber-200' :
-                        'bg-card hover:border-primary/30'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <StatusBadge status={unit.status} />
-                        {isFull && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
-                        {!isFull && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
-                      </div>
-                      <p className="text-sm font-semibold mt-2 leading-tight">{unit.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {unit.unit_type?.replace(/_/g,' ')}
-                      </p>
-                      <div className="mt-3 space-y-1.5">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{occ} / {cap}</span>
-                          {unit.temperature_celsius !== undefined && (
-                            <span className="flex items-center gap-0.5">
-                              <Thermometer className="w-3 h-3" />{unit.temperature_celsius}°C
-                            </span>
-                          )}
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${isFull ? 'bg-red-500' : isNearFull ? 'bg-amber-500' : 'bg-green-500'}`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                      {/* Occupant info from decedents */}
-                      {(() => {
-                        const occupant = decedents.find(d =>
-                          d.storage_location_label === unit.label && d.status !== 'released' && d.status !== 'transferred'
-                        );
-                        if (!occupant) return null;
-                        const oName = occupant.first_name
-                          ? `${occupant.first_name} ${occupant.last_name || ''}`.trim()
-                          : 'Unidentified';
-                        return (
-                          <div className="mt-3 pt-2.5 border-t border-dashed">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <User className="w-3 h-3 text-muted-foreground" />
-                              <span className="font-mono text-[10px] text-muted-foreground">{occupant.unique_id}</span>
-                            </div>
-                            <p className="text-xs font-medium text-foreground truncate">{oName}</p>
-                            {occupant.identification_status === 'unidentified' && (
-                              <p className="text-[10px] text-amber-600 flex items-center gap-0.5 mt-0.5">
-                                <AlertTriangle className="w-2.5 h-2.5" /> Unidentified
-                              </p>
-                            )}
-                            <Link to={`/decedent/${occupant.id}`} className="text-[10px] text-primary hover:underline flex items-center gap-0.5 mt-1">
-                              View case <ArrowRight className="w-2.5 h-2.5" />
-                            </Link>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          {selectedLocation === 'all' ? (
+            HOSPITAL_LIST.map(h => {
+              const hospUnits = fUnits.filter(u => u.hospital_location === h.id);
+              if (hospUnits.length === 0) return null;
+              const hospByRoom = hospUnits.reduce((acc, u) => {
+                const room = u.room || 'Unassigned';
+                if (!acc[room]) acc[room] = [];
+                acc[room].push(u);
+                return acc;
+              }, {});
+              return (
+                <div key={h.id} className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <HospitalBadge hospitalId={h.id} size="md" showIcon />
+                    <span className="text-xs text-muted-foreground">{hospUnits.length} units · {hospUnits.filter(u => u.status === 'occupied').length} occupied</span>
+                  </div>
+                  {Object.entries(hospByRoom).map(([room, roomUnits]) => renderRoom(room, roomUnits))}
+                </div>
+              );
+            })
+          ) : (
+            Object.entries(byRoom).map(([room, roomUnits]) => renderRoom(room, roomUnits))
+          )}
         </div>
       )}
     </div>
