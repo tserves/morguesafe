@@ -12,6 +12,7 @@ import PersonalEffectsSection from './PersonalEffectsSection';
 import IntakePrintModal from './IntakePrintModal';
 import DocumentUploadTab from './DocumentUploadTab';
 import AutofillReviewModal from './AutofillReviewModal';
+import DonationStep from '@/components/DonationStep';
 
 function generateUniqueId() {
   const year = new Date().getFullYear();
@@ -48,6 +49,8 @@ export default function ReferredIntakeForm({ onBack }) {
     notes: '',
   });
   const [effects, setEffects] = useState({ present: 'no' });
+  const [donor, setDonor] = useState({ is_donor: 'unknown' });
+  const setDonorField = (field, value) => setDonor(d => ({ ...d, [field]: value }));
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
@@ -96,8 +99,8 @@ export default function ReferredIntakeForm({ onBack }) {
       ].filter(Boolean).join(' | '),
       identification_status: 'pending_verification',
       status: 'intake',
-      is_donor: 'unknown',
-      flags: ['REFERRED CASE'],
+      ...donor,
+      flags: donor.is_donor === 'yes' ? ['REFERRED CASE', 'DONOR CASE', 'HIGH PRIORITY'] : ['REFERRED CASE'],
       documents: allDocUrls,
     });
 
@@ -254,6 +257,10 @@ export default function ReferredIntakeForm({ onBack }) {
           </div>
 
           <PersonalEffectsSection effects={effects} onChange={setEffects} />
+
+          <div className="bg-card border rounded-xl p-5">
+            <DonationStep form={donor} set={setDonorField} />
+          </div>
 
           <Button className="w-full" onClick={handleSubmit} disabled={saving || !form.arrival_datetime || !form.received_by}>
             {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Complete Referred Intake'}

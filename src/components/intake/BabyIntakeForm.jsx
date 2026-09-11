@@ -12,6 +12,7 @@ import PersonalEffectsSection from './PersonalEffectsSection';
 import IntakePrintModal from './IntakePrintModal';
 import DocumentUploadTab from './DocumentUploadTab';
 import AutofillReviewModal from './AutofillReviewModal';
+import DonationStep from '@/components/DonationStep';
 
 function generateUniqueId() {
   const year = new Date().getFullYear();
@@ -49,6 +50,8 @@ export default function BabyIntakeForm({ onBack }) {
     notes: '',
   });
   const [effects, setEffects] = useState({ present: 'no' });
+  const [donor, setDonor] = useState({ is_donor: 'unknown' });
+  const setDonorField = (field, value) => setDonor(d => ({ ...d, [field]: value }));
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
@@ -97,8 +100,8 @@ export default function BabyIntakeForm({ onBack }) {
       notes: babyNotes,
       identification_status: 'pending_verification',
       status: 'intake',
-      is_donor: 'no',
-      flags: ['BABY / NEONATE'],
+      ...donor,
+      flags: donor.is_donor === 'yes' ? ['BABY / NEONATE', 'DONOR CASE', 'HIGH PRIORITY'] : ['BABY / NEONATE'],
       documents: allDocUrls,
     });
 
@@ -261,6 +264,10 @@ export default function BabyIntakeForm({ onBack }) {
           </div>
 
           <PersonalEffectsSection effects={effects} onChange={setEffects} />
+
+          <div className="bg-card border rounded-xl p-5">
+            <DonationStep form={donor} set={setDonorField} />
+          </div>
 
           <Button className="w-full" onClick={handleSubmit} disabled={saving || !form.arrival_datetime}>
             {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</> : 'Complete Baby Intake'}
