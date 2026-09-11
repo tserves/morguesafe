@@ -19,7 +19,7 @@ const TYPE_COLORS = {
   decomp_unit: 'text-orange-600 bg-orange-50 border-orange-200',
 };
 
-export default function StoragePicker({ selectedId, onSelect }) {
+export default function StoragePicker({ selectedId, onSelect, hospitalLocation }) {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');
@@ -31,8 +31,11 @@ export default function StoragePicker({ selectedId, onSelect }) {
     });
   }, []);
 
-  const available = units.filter(u => u.status === 'available');
-  const types = [...new Set(units.map(u => u.unit_type))];
+  const scopedUnits = hospitalLocation && hospitalLocation !== 'all'
+    ? units.filter(u => u.hospital_location === hospitalLocation)
+    : units;
+  const available = scopedUnits.filter(u => u.status === 'available');
+  const types = [...new Set(scopedUnits.map(u => u.unit_type))];
 
   const filtered = available.filter(u =>
     typeFilter === 'all' || u.unit_type === typeFilter

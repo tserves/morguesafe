@@ -7,10 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Warehouse, Plus, Thermometer, AlertTriangle, 
+import {
+  Warehouse, Plus, Thermometer, AlertTriangle,
   CheckCircle, Loader2, X, User, ArrowRight
 } from 'lucide-react';
+import HospitalBadge from '@/components/HospitalBadge';
+import { useLocation } from '@/lib/LocationContext';
+import { filterByLocation, HOSPITAL_LIST } from '@/lib/hospitals';
 
 export default function StorageManagement() {
   const [units, setUnits] = useState([]);
@@ -18,11 +21,12 @@ export default function StorageManagement() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    label: '', room: '', unit_type: '', capacity: 1,
+    label: '', room: '', unit_type: '', capacity: 1, hospital_location: 'oakville',
     temperature_celsius: -4, status: 'available', location_code: '', notes: ''
   });
 
   const [decedents, setDecedents] = useState([]);
+  const { selectedLocation } = useLocation();
 
   useEffect(() => {
     Promise.all([
@@ -48,25 +52,27 @@ export default function StorageManagement() {
     setUnits(prev => [...prev, unit]);
     setSaving(false);
     setShowForm(false);
-    setForm({ label: '', room: '', unit_type: '', capacity: 1, temperature_celsius: -4, status: 'available', location_code: '', notes: '' });
+    setForm({ label: '', room: '', unit_type: '', capacity: 1, hospital_location: 'oakville', temperature_celsius: -4, status: 'available', location_code: '', notes: '' });
   };
 
-  const byRoom = units.reduce((acc, u) => {
+  const fUnits = filterByLocation(units, selectedLocation);
+
+  const byRoom = fUnits.reduce((acc, u) => {
     const room = u.room || 'Unassigned';
     if (!acc[room]) acc[room] = [];
     acc[room].push(u);
     return acc;
   }, {});
 
-  const totalCapacity = units.reduce((a, u) => a + (u.capacity || 0), 0);
-  const totalOccupied = units.reduce((a, u) => a + (u.current_occupancy || 0), 0);
+  const totalCapacity = fUnits.reduce((a, u) => a + (u.capacity || 0), 0);
+  const totalOccupied = fUnits.reduce((a, u) => a + (u.current_occupancy || 0), 0);
   const occupancyPct = totalCapacity ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <PageHeader
         title="Storage Management"
-        subtitle="Morgue compartment map and occupancy"
+        subtitle={`Morgue compartment map and occupancy${selectedLocation !== 'all' ? ' · ' + (HOSPITAL_LIST.find(h => h.id === selectedLocation)?.short || '') : ' · All Locations'}`}
         actions={
           <Button size="sm" className="gap-2" onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4" /> Add Unit
@@ -107,6 +113,17 @@ export default function StorageManagement() {
             <div className="md:col-span-2">
               <Label>Label *</Label>
               <Input className="mt-1.5" placeholder="e.g. Room A - Rack 1 - Tray 3" value={form.label} onChange={e => set('label', e.target.value)} />
+            </div>
+            <div>
+              <Label>Hospital Location</Label>
+              <Select value={form.hospital_location} onValueChange={v => set('hospital_location', v)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {HOSPITAL_LIST.map(h => (
+                    <SelectItem key={h.id} value={h.id}>{h.short}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Room</Label>

@@ -13,6 +13,7 @@ import IntakePrintModal from './IntakePrintModal';
 import DocumentUploadTab from './DocumentUploadTab';
 import AutofillReviewModal from './AutofillReviewModal';
 import DonationStep from '@/components/DonationStep';
+import HospitalField from './HospitalField';
 
 function generateUniqueId() {
   const year = new Date().getFullYear();
@@ -37,6 +38,7 @@ export default function BabyIntakeForm({ onBack }) {
   const [scanSummary, setScanSummary] = useState('');
   const [form, setForm] = useState({
     unique_id: generateUniqueId(),
+    hospital_location: 'oakville',
     baby_name: '',
     sex: '',
     arrival_datetime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -89,6 +91,8 @@ export default function BabyIntakeForm({ onBack }) {
 
     const decedent = await base44.entities.Decedent.create({
       unique_id: form.unique_id,
+      hospital_location: form.hospital_location,
+      originating_hospital: form.hospital_location,
       first_name: form.baby_name || 'Baby',
       last_name: form.mother_name ? `(of ${form.mother_name})` : '',
       gender: form.sex || 'unknown',
@@ -109,6 +113,7 @@ export default function BabyIntakeForm({ onBack }) {
       decedent_id: decedent.id,
       decedent_unique_id: decedent.unique_id,
       action_type: 'intake',
+      hospital_location: form.hospital_location,
       to_location: form.delivery_unit || 'Intake Bay',
       performed_by: form.attending_staff || 'System',
       performed_by_role: 'Intake Staff',
@@ -123,6 +128,7 @@ export default function BabyIntakeForm({ onBack }) {
       await base44.entities.PersonalEffect.create({
         decedent_id: decedent.id,
         decedent_unique_id: decedent.unique_id,
+        hospital_location: form.hospital_location,
         item_name: effects.description || 'Personal effects',
         description: effects.description || '',
         quantity: effects.quantity ? Number(effects.quantity) : 1,
@@ -206,6 +212,7 @@ export default function BabyIntakeForm({ onBack }) {
       {tab === 'form' && (
         <div className="space-y-4">
           <div className="bg-card border rounded-xl p-5 space-y-4">
+            <HospitalField value={form.hospital_location} onChange={v => set('hospital_location', v)} />
             <div>
               <Label>Baby Name (if available)</Label>
               <Input className="mt-1.5" value={form.baby_name} onChange={e => set('baby_name', e.target.value)} placeholder="If known" />

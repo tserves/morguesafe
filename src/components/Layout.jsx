@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
+import LocationSelector from '@/components/LocationSelector';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', color: 'text-blue-400' },
@@ -100,11 +101,12 @@ export default function Layout() {
             <Menu className="w-5 h-5" />
           </button>
           <img
-            src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/5d0658fe9_image.png"
-            alt="Sindi Health"
-            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+            src="https://media.base44.com/images/public/69f965e3075699f1a1c46d47/4e7e485fe_image.png"
+            alt="Halton Healthcare"
+            style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
           />
           <div className="flex-1" />
+          <LocationSelector />
           <div className="flex items-center gap-2">
             <button className="relative p-2 rounded-full hover:bg-muted transition-colors">
               <Bell className="w-4 h-4 text-muted-foreground" />

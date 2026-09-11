@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import { format } from 'date-fns';
+import { getHospital } from '@/lib/hospitals';
 
 /**
  * Printable label with QR code + barcode for a decedent.
@@ -16,6 +17,7 @@ export default function DecedentLabel({ decedent, printMode = false }) {
     name: decedent.first_name ? `${decedent.first_name} ${decedent.last_name || ''}`.trim() : 'Unidentified',
     status: decedent.status,
     arrival: decedent.arrival_datetime,
+    hospital: decedent.hospital_location,
   });
 
   // Barcode uses the unique_id string (e.g. MS-2026-0001 → strip non-alphanumeric for CODE128)
@@ -51,6 +53,9 @@ export default function DecedentLabel({ decedent, printMode = false }) {
         <div>
           <p className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">MorgueSafe</p>
           <p className="text-xs font-bold text-gray-900 font-mono">{decedent.unique_id}</p>
+          {decedent.hospital_location && (
+            <p className="text-[9px] text-gray-600 mt-0.5 font-medium">{getHospital(decedent.hospital_location)?.short || ''}</p>
+          )}
         </div>
         <div className="text-right">
           <p className="text-[9px] text-gray-500 uppercase tracking-wide">Status</p>

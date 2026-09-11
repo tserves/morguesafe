@@ -15,6 +15,9 @@ import {
 import { format } from 'date-fns';
 import DonorBadge from '@/components/DonorBadge';
 import StoragePicker from '@/components/StoragePicker';
+import HospitalBadge from '@/components/HospitalBadge';
+import { useLocation } from '@/lib/LocationContext';
+import { filterByLocation, HOSPITAL_LIST } from '@/lib/hospitals';
 
 const TYPE_LABELS = {
   refrigerated_tray: 'Refrigerated',
@@ -172,6 +175,7 @@ function EditModal({ decedent, onSave, onClose }) {
             <StoragePicker
               selectedUnitId={form.storage_location_id}
               onSelect={handleStorageSelect}
+              hospitalLocation={form.hospital_location}
             />
             {form.storage_location_id && (
               <button
@@ -181,6 +185,19 @@ function EditModal({ decedent, onSave, onClose }) {
                 Clear storage assignment
               </button>
             )}
+          </div>
+
+          {/* Hospital Location */}
+          <div>
+            <Label>Hospital Location</Label>
+            <Select value={form.hospital_location || 'oakville'} onValueChange={v => set('hospital_location', v)}>
+              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {HOSPITAL_LIST.map(h => (
+                  <SelectItem key={h.id} value={h.id}>{h.short}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Autopsy */}
@@ -235,6 +252,7 @@ export default function IntakeList() {
   const [storageTypeFilter, setStorageTypeFilter] = useState('all');
   const [donorFilter, setDonorFilter] = useState('all'); // 'all' | 'donor' | 'non_donor'
   const [editTarget, setEditTarget] = useState(null);
+  const { selectedLocation } = useLocation();
 
   useEffect(() => {
     Promise.all([
@@ -254,7 +272,8 @@ export default function IntakeList() {
 
   const storageTypes = [...new Set(storageUnits.map(u => u.unit_type))];
 
-  const filtered = decedents.filter(d => {
+  const fDecedents = filterByLocation(decedents, selectedLocation);
+  const filtered = fDecedents.filter(d => {
     const name = `${d.first_name || ''} ${d.last_name || ''}`.toLowerCase();
     const matchSearch = !search ||
       name.includes(search.toLowerCase()) ||
@@ -284,14 +303,14 @@ export default function IntakeList() {
     return matchSearch && matchStatus && matchStorage && matchStorageType && matchDonor;
   });
 
-  const pendingCount = decedents.filter(d => !d.storage_location_id && !d.storage_location_label).length;
-  const donorCount = decedents.filter(d => d.is_donor === 'yes').length;
+  const pendingCount = fDecedents.filter(d => !d.storage_location_id && !d.storage_location_label).length;
+  const donorCount = fDecedents.filter(d => d.is_donor === 'yes').length;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader
         title="Intake List"
-        subtitle={`${decedents.length} total cases · ${pendingCount} storage pending · ${donorCount} donor cases`}
+        subtitle={`${fDecedents.length} cases${selectedLocation !== 'all' ? ' · ' + (HOSPITAL_LIST.find(h => h.id === selectedLocation)?.short || '') : ' · All Locations'} · ${pendingCount} storage pending · ${donorCount} donor cases`}
         actions={
           <Link to="/intake">
             <Button size="sm" className="gap-2">
@@ -402,6 +421,7 @@ export default function IntakeList() {
               <thead>
                 <tr className="border-b bg-muted/40">
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Case ID</th>
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Hospital</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Name</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Status</th>
                   <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Arrival</th>
@@ -421,6 +441,9 @@ export default function IntakeList() {
                           {d.flags?.length > 0 && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
                           <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{d.unique_id}</span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <HospitalBadge hospitalId={d.hospital_location} size="sm" showIcon={false} showCode />
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-foreground">{name}</p>

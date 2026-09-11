@@ -10,6 +10,8 @@ import {
   ShieldCheck, User, Stethoscope, Fingerprint, ClipboardList, Search,
   Pencil, Trash2, AlertTriangle
 } from 'lucide-react';
+import HospitalBadge from '@/components/HospitalBadge';
+import { HOSPITAL_LIST } from '@/lib/hospitals';
 
 const ROLES = [
   {
@@ -209,11 +211,13 @@ function InviteModal({ onClose, onInvited }) {
 
 function EditUserModal({ user, onClose, onSaved }) {
   const [role, setRole] = useState(user.role || 'user');
+  const [assignedHospitals, setAssignedHospitals] = useState(user.assigned_hospitals || ['oakville', 'milton', 'georgetown']);
+  const [accessLevel, setAccessLevel] = useState(user.location_access_level || 'all');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.entities.User.update(user.id, { role });
+    await base44.entities.User.update(user.id, { role, assigned_hospitals: assignedHospitals, location_access_level: accessLevel });
     onSaved();
     onClose();
     setSaving(false);
@@ -273,6 +277,43 @@ function EditUserModal({ user, onClose, onSaved }) {
             {selectedRole && (
               <p className="mt-1.5 text-xs text-muted-foreground">{selectedRole.description}</p>
             )}
+          </div>
+
+          {/* Hospital Location Access */}
+          <div>
+            <Label>Location Access Level</Label>
+            <Select value={accessLevel} onValueChange={setAccessLevel}>
+              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Hospitals</SelectItem>
+                <SelectItem value="multiple">Multiple Hospitals</SelectItem>
+                <SelectItem value="single">Single Hospital</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Assigned Hospitals</Label>
+            <div className="grid grid-cols-1 gap-2 mt-1.5">
+              {HOSPITAL_LIST.map(h => (
+                <label key={h.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={assignedHospitals.includes(h.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setAssignedHospitals([...assignedHospitals, h.id]);
+                      } else {
+                        setAssignedHospitals(assignedHospitals.filter(id => id !== h.id));
+                      }
+                    }}
+                    className="w-4 h-4 rounded accent-primary"
+                  />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: h.color }} />
+                  <span className="text-sm font-medium">{h.name}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -446,6 +487,7 @@ export default function AdminUsers() {
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Name</th>
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Email</th>
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Role</th>
+                <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Hospitals</th>
                 <th className="text-left px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Joined</th>
                 <th className="text-right px-5 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wide">Actions</th>
               </tr>
@@ -465,6 +507,13 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-5 py-3 text-muted-foreground text-xs">{u.email}</td>
                   <td className="px-5 py-3"><RoleBadge role={u.role} /></td>
+                  <td className="px-5 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(u.assigned_hospitals || ['oakville', 'milton', 'georgetown']).map(hid => (
+                        <HospitalBadge key={hid} hospitalId={hid} size="sm" showIcon={false} showCode />
+                      ))}
+                    </div>
+                  </td>
                   <td className="px-5 py-3 text-xs text-muted-foreground">
                     {u.created_date ? new Date(u.created_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                   </td>

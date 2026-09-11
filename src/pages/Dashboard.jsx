@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import StatusBadge from '@/components/StatusBadge';
+import HospitalBadge from '@/components/HospitalBadge';
+import HospitalComparisonCards from '@/components/dashboard/HospitalComparisonCards';
+import StorageCapacityPanel from '@/components/dashboard/StorageCapacityPanel';
 import { Button } from '@/components/ui/button';
-import { format, isToday, formatDistanceToNow } from 'date-fns';
+import { useLocation } from '@/lib/LocationContext';
+import { HOSPITAL_LIST, filterByLocation, getHospital } from '@/lib/hospitals';
+import { format, isToday, formatDistanceToNow, differenceInHours } from 'date-fns';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
@@ -13,10 +18,10 @@ import {
   Users, AlertTriangle, Warehouse, FlaskConical,
   Clock, CheckCircle, UserPlus, Shield, ArrowRight,
   QrCode, TrendingUp, Activity, Fingerprint, LogOut,
-  CalendarDays, ClipboardList, ChevronRight, ArrowUpRight
+  CalendarDays, ClipboardList, ChevronRight, ArrowUpRight,
+  Heart, ArrowLeftRight, Building2, FileWarning
 } from 'lucide-react';
 
-/* ── helpers ───────────────────────────────────────────── */
 const KPI_COLORS = {
   total:        { bg: 'bg-blue-50',   border: 'border-blue-200',   accent: '#2563eb', label: 'text-blue-600' },
   storage:      { bg: 'bg-cyan-50',   border: 'border-cyan-200',   accent: '#0891b2', label: 'text-cyan-700' },
@@ -77,6 +82,7 @@ const actionTypeColors = {
   intake: '#3b82f6', scan_in: '#22c55e', scan_out: '#f59e0b',
   moved_to_storage: '#06b6d4', moved_to_examination: '#a855f7',
   released: '#22c55e', transferred: '#94a3b8', alert_raised: '#ef4444',
+  hospital_transfer: '#6366f1',
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -91,72 +97,105 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* ── main ───────────────────────────────────────────────── */
 export default function Dashboard() {
+  const { selectedLocation } = useLocation();
   const [decedents, setDecedents] = useState([]);
   const [custodyLogs, setCustodyLogs] = useState([]);
   const [examinations, setExaminations] = useState([]);
   const [releases, setReleases] = useState([]);
+  const [storageUnits, setStorageUnits] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Decedent.list('-arrival_datetime', 200),
-      base44.entities.CustodyLog.list('-timestamp', 15),
+      base44.entities.Decedent.list('-arrival_datetime', 500),
+      base44.entities.CustodyLog.list('-timestamp', 20),
       base44.entities.Examination.list('-scheduled_datetime', 100),
       base44.entities.Release.list('-created_date', 100),
-    ]).then(([d, c, e, r]) => {
-      setDecedents(d); setCustodyLogs(c); setExaminations(e); setReleases(r);
+      base44.entities.StorageUnit.list(),
+      base44.entities.HospitalTransfer.list('-transfer_datetime', 50),
+    ]).then(([d, c, e, r, s, t]) => {
+      setDecedents(d); setCustodyLogs(c); setExaminations(e); setReleases(r); setStorageUnits(s); setTransfers(t);
       setLoading(false);
     });
   }, []);
 
-  const todayIntakes = decedents.filter(d => d.arrival_datetime && isToday(new Date(d.arrival_datetime)));
+  // Filter all data by selected hospital location
+  const fDecedents = filterByLocation(decedents, selectedLocation);
+  const fCustodyLogs = filterByLocation(custodyLogs, selectedLocation);
+  const fExaminations = filterByLocation(examinations, selectedLocation);
+  const fReleases = filterByLocation(releases, selectedLocation);
+  const fStorageUnits = filterByLocation(storageUnits, selectedLocation);
+
+  const todayIntakes = fDecedents.filter(d => d.arrival_datetime && isToday(new Date(d.arrival_datetime)));
+  const todayReleases = fReleases.filter(r => r.release_datetime && isToday(new Date(r.release_datetime)) && r.status === 'completed');
+
+  const activeCases = fDecedents.filter(d => d.status !== 'released' && d.status !== 'transferred');
+  const pendingReleases = fReleases.filter(r => r.status !== 'completed' && r.status !== 'rejected');
+  const unidentified = fDecedents.filter(d => d.identification_status === 'unidentified');
+  const pendingDocs = fDecedents.filter(d => !d.documentation_complete && d.status !== 'released');
+  const donorCases = fDecedents.filter(d => d.is_donor === 'yes');
+  const coronerCases = fDecedents.filter(d => d.law_enforcement_case || d.manner_of_death === 'homicide' || d.manner_of_death === 'undetermined');
+  const funeralPickups = fReleases.filter(r => r.release_type === 'funeral_home');
+
+  // Holding time threshold: >72 hours in storage/holding
+  const longHolding = activeCases.filter(d => {
+    if (!d.arrival_datetime) return false;
+    return differenceInHours(new Date(), new Date(d.arrival_datetime)) > 72;
+  });
+
+  const flaggedCases = fDecedents.filter(d => d.flags?.length > 0);
 
   const stats = {
-    total:        decedents.length,
-    inStorage:    decedents.filter(d => d.status === 'storage').length,
-    inExam:       decedents.filter(d => d.status === 'examination').length,
-    unidentified: decedents.filter(d => d.identification_status === 'unidentified').length,
-    flagged:      decedents.filter(d => d.flags?.length > 0).length,
-    released:     decedents.filter(d => d.status === 'released').length,
+    total: activeCases.length,
+    inStorage: fDecedents.filter(d => d.status === 'storage').length,
+    inExam: fDecedents.filter(d => d.status === 'examination').length,
+    unidentified: unidentified.length,
+    flagged: flaggedCases.length,
+    released: fDecedents.filter(d => d.status === 'released').length,
   };
 
-  // Pie: status distribution
   const statusPieData = [
-    { name: 'Intake',       value: decedents.filter(d => d.status === 'intake').length },
-    { name: 'Storage',      value: stats.inStorage },
-    { name: 'Examination',  value: stats.inExam },
-    { name: 'Holding',      value: decedents.filter(d => d.status === 'holding').length },
-    { name: 'Released',     value: stats.released },
-    { name: 'Transferred',  value: decedents.filter(d => d.status === 'transferred').length },
+    { name: 'Intake', value: fDecedents.filter(d => d.status === 'intake').length },
+    { name: 'Storage', value: stats.inStorage },
+    { name: 'Examination', value: stats.inExam },
+    { name: 'Holding', value: fDecedents.filter(d => d.status === 'holding').length },
+    { name: 'Released', value: stats.released },
+    { name: 'Transferred', value: fDecedents.filter(d => d.status === 'transferred').length },
   ].filter(d => d.value > 0);
 
-  // Pie: identification
   const idPieData = [
-    { name: 'Identified',        value: decedents.filter(d => d.identification_status === 'identified').length },
-    { name: 'Unidentified',      value: stats.unidentified },
-    { name: 'Pending',           value: decedents.filter(d => d.identification_status === 'pending_verification').length },
+    { name: 'Identified', value: fDecedents.filter(d => d.identification_status === 'identified').length },
+    { name: 'Unidentified', value: stats.unidentified },
+    { name: 'Pending', value: fDecedents.filter(d => d.identification_status === 'pending_verification').length },
   ].filter(d => d.value > 0);
 
-  const monthlyData = buildMonthlyData(decedents);
+  const monthlyData = buildMonthlyData(fDecedents);
 
-  // Bar: exam types
+  // Bar: cases by hospital (only when all locations)
+  const hospitalBarData = HOSPITAL_LIST.map(h => ({
+    name: h.code,
+    Active: decedents.filter(d => d.hospital_location === h.id && d.status !== 'released' && d.status !== 'transferred').length,
+    Released: decedents.filter(d => d.hospital_location === h.id && d.status === 'released').length,
+  }));
+
+  // Exam types
   const examTypeMap = {};
-  examinations.forEach(e => {
+  fExaminations.forEach(e => {
     const t = e.exam_type?.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) || 'Other';
     examTypeMap[t] = (examTypeMap[t] || 0) + 1;
   });
   const examBarData = Object.entries(examTypeMap).map(([name, count]) => ({ name, Count: count }));
 
-  const pendingReleases = releases.filter(r => r.status !== 'completed' && r.status !== 'rejected');
-  const upcomingExams = examinations.filter(e => e.status === 'scheduled' || e.status === 'in_progress').slice(0, 4);
-  const alertDecedents = decedents.filter(d => d.flags?.length > 0).slice(0, 4);
-  const recentCases = decedents.slice(0, 5);
+  const recentCases = fDecedents.slice(0, 5);
+  const alertDecedents = flaggedCases.slice(0, 4);
+  const isAllLocations = selectedLocation === 'all';
+  const selectedHospital = isAllLocations ? null : getHospital(selectedLocation);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
-      {/* Top header */}
+      {/* Header */}
       <div className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <div>
@@ -164,7 +203,10 @@ export default function Dashboard() {
               <Activity className="w-3.5 h-3.5 text-blue-500/70" />
               <p className="text-[11px] text-blue-500/70 font-mono uppercase tracking-widest">Operations Intelligence Center</p>
             </div>
-            <h1 className="text-lg font-bold text-slate-800">Custiviant Dashboard</h1>
+            <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              {isAllLocations ? 'Enterprise Dashboard' : `${selectedHospital?.short} Dashboard`}
+              {!isAllLocations && <HospitalBadge hospitalId={selectedLocation} size="sm" />}
+            </h1>
             <p className="text-xs text-slate-400 mt-0.5">{format(new Date(), "EEEE, MMMM d, yyyy · HH:mm")}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -184,21 +226,56 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
-
         {/* KPI Row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-          <KpiCard label="Total Cases"   value={loading ? '—' : stats.total}        icon={Users}        colorKey="total"        to="/intake-list" delta={todayIntakes.length} />
-          <KpiCard label="In Storage"    value={loading ? '—' : stats.inStorage}    icon={Warehouse}    colorKey="storage"      to="/storage" />
-          <KpiCard label="Examination"   value={loading ? '—' : stats.inExam}       icon={FlaskConical} colorKey="exam"         to="/examinations" />
-          <KpiCard label="Unidentified"  value={loading ? '—' : stats.unidentified} icon={Fingerprint}  colorKey="unidentified" />
-          <KpiCard label="Flagged"       value={loading ? '—' : stats.flagged}      icon={Shield}       colorKey="flagged" />
-          <KpiCard label="Released"      value={loading ? '—' : stats.released}     icon={CheckCircle}  colorKey="released" />
+          <KpiCard label="Active Cases" value={loading ? '—' : stats.total} icon={Users} colorKey="total" to="/intake-list" delta={todayIntakes.length} />
+          <KpiCard label="In Storage" value={loading ? '—' : stats.inStorage} icon={Warehouse} colorKey="storage" to="/storage" />
+          <KpiCard label="Released Today" value={loading ? '—' : todayReleases.length} icon={CheckCircle} colorKey="released" />
+          <KpiCard label="Pending Releases" value={loading ? '—' : pendingReleases.length} icon={LogOut} colorKey="flagged" to="/release" />
+          <KpiCard label="Unidentified" value={loading ? '—' : stats.unidentified} icon={Fingerprint} colorKey="unidentified" />
+          <KpiCard label="Donor Cases" value={loading ? '—' : donorCases.length} icon={Heart} colorKey="exam" />
+        </div>
+
+        {/* Hospital Comparison Cards — only when All Locations */}
+        {isAllLocations && !loading && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Building2 className="w-4 h-4 text-slate-400" />
+              <h2 className="text-sm font-semibold text-slate-700">Hospital Comparison</h2>
+            </div>
+            <HospitalComparisonCards
+              decedents={decedents}
+              storageUnits={storageUnits}
+              releases={releases}
+              transfers={transfers}
+            />
+          </div>
+        )}
+
+        {/* Additional metrics row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-3">
+          {[
+            { label: 'New Admissions Today', value: todayIntakes.length, icon: ArrowUpRight, color: 'text-green-600 bg-green-50' },
+            { label: 'Coroner / LE Cases', value: coronerCases.length, icon: Shield, color: 'text-indigo-600 bg-indigo-50' },
+            { label: 'Funeral Home Pickups', value: funeralPickups.length, icon: LogOut, color: 'text-amber-600 bg-amber-50' },
+            { label: 'Inter-Hospital Transfers', value: transfers.filter(t => isAllLocations || t.from_hospital === selectedLocation || t.to_hospital === selectedLocation).length, icon: ArrowLeftRight, color: 'text-blue-600 bg-blue-50' },
+            { label: 'Pending Documentation', value: pendingDocs.length, icon: FileWarning, color: 'text-orange-600 bg-orange-50' },
+            { label: 'Extended Holding (>72h)', value: longHolding.length, icon: Clock, color: 'text-red-600 bg-red-50' },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color.split(' ')[1]}`}>
+                <Icon className={`w-4 h-4 ${color.split(' ')[0]}`} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-800 leading-none">{loading ? '—' : value}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{label}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Charts Row 1 */}
         <div className="grid xl:grid-cols-3 gap-5">
-
-          {/* Area Chart — 6-month trend */}
           <div className="xl:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -227,14 +304,13 @@ export default function Dashboard() {
                   <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '11px', color: '#64748b' }} />
-                  <Area type="monotone" dataKey="Intakes"  stroke="#3b82f6" strokeWidth={2} fill="url(#intakeGrad)" dot={{ fill: '#3b82f6', r: 3 }} />
+                  <Area type="monotone" dataKey="Intakes" stroke="#3b82f6" strokeWidth={2} fill="url(#intakeGrad)" dot={{ fill: '#3b82f6', r: 3 }} />
                   <Area type="monotone" dataKey="Released" stroke="#22c55e" strokeWidth={2} fill="url(#releaseGrad)" dot={{ fill: '#22c55e', r: 3 }} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
 
-          {/* Pie — Status Distribution */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -269,10 +345,45 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Cases by Hospital bar chart — only when All Locations */}
+        {isAllLocations && !loading && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-800">Cases by Hospital</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Active vs Released across all locations</p>
+              </div>
+              <Building2 className="w-4 h-4 text-slate-400" />
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={hospitalBarData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '11px', color: '#64748b' }} />
+                <Bar dataKey="Active" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Released" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Storage Capacity by Hospital */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Warehouse className="w-4 h-4 text-cyan-500" />
+            <h2 className="text-sm font-semibold text-slate-700">Storage Capacity & Occupancy</h2>
+          </div>
+          {loading ? (
+            <div className="h-32 bg-slate-100 rounded-xl animate-pulse" />
+          ) : (
+            <StorageCapacityPanel storageUnits={storageUnits} selectedLocation={selectedLocation} />
+          )}
+        </div>
+
         {/* Charts Row 2 */}
         <div className="grid xl:grid-cols-3 gap-5">
-
-          {/* Bar — Exam Types */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -298,7 +409,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Pie — Identification */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -355,18 +465,19 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="flex-1 space-y-1 overflow-hidden">
-              {custodyLogs.length === 0 ? (
+              {fCustodyLogs.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-6">No activity logged</p>
-              ) : custodyLogs.map(log => (
+              ) : fCustodyLogs.map(log => (
                 <div key={log.id} className="flex items-start gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: actionTypeColors[log.action_type] || '#94a3b8' }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-slate-700 capitalize leading-snug">
                       {log.action_type?.replace(/_/g, ' ')}
                     </p>
-                    <p className="text-[10px] text-slate-400">
-                      {log.decedent_unique_id} · {log.performed_by}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[10px] text-slate-400">{log.decedent_unique_id} · {log.performed_by}</p>
+                      {log.hospital_location && <HospitalBadge hospitalId={log.hospital_location} size="sm" showIcon={false} showCode />}
+                    </div>
                   </div>
                   <p className="text-[10px] text-slate-400 shrink-0">
                     {log.timestamp
@@ -383,7 +494,6 @@ export default function Dashboard() {
 
         {/* Bottom Row */}
         <div className="grid xl:grid-cols-3 gap-5">
-
           {/* Recent Cases */}
           <div className="xl:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -413,6 +523,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{d.unique_id}</span>
                           {d.flags?.length > 0 && <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                          {isAllLocations && <HospitalBadge hospitalId={d.hospital_location} size="sm" showIcon={false} showCode />}
                         </div>
                         <p className="text-sm font-medium text-slate-700 truncate mt-0.5">{name}</p>
                       </div>
@@ -432,7 +543,6 @@ export default function Dashboard() {
 
           {/* Alerts + Pending */}
           <div className="space-y-4">
-            {/* Alerts */}
             <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-red-800 flex items-center gap-1.5">
@@ -454,7 +564,10 @@ export default function Dashboard() {
                       <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-100 border border-red-200 hover:border-red-300 transition-colors">
                         <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-mono text-[10px] text-red-600">{d.unique_id}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-mono text-[10px] text-red-600">{d.unique_id}</p>
+                            {isAllLocations && <HospitalBadge hospitalId={d.hospital_location} size="sm" showIcon={false} showCode />}
+                          </div>
                           <p className="text-[11px] text-red-700 truncate">{d.flags?.join(' · ')}</p>
                         </div>
                         <ChevronRight className="w-3 h-3 text-red-400 shrink-0" />
@@ -465,7 +578,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Pending Releases */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
@@ -483,7 +595,10 @@ export default function Dashboard() {
                     <div key={r.id} className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 border border-amber-100">
                       <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-700 truncate">{r.decedent_name || r.decedent_unique_id}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-medium text-slate-700 truncate">{r.decedent_name || r.decedent_unique_id}</p>
+                          {isAllLocations && r.hospital_location && <HospitalBadge hospitalId={r.hospital_location} size="sm" showIcon={false} showCode />}
+                        </div>
                         <p className="text-[10px] text-slate-500 capitalize">{r.release_type?.replace('_',' ')} · {r.receiving_party_name}</p>
                       </div>
                       <StatusBadge status={r.status} />
@@ -496,7 +611,6 @@ export default function Dashboard() {
               </Link>
             </div>
           </div>
-
         </div>
       </div>
     </div>

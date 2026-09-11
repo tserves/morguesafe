@@ -8,10 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, MapPin, Clock, User, Shield, Package,
   FlaskConical, LogOut, AlertTriangle, CheckCircle,
-  ChevronDown, Loader2, QrCode, Heart
+  ChevronDown, Loader2, QrCode, Heart, ArrowLeftRight
 } from 'lucide-react';
 import LabelPrintModal from '@/components/LabelPrintModal';
 import DonorBadge from '@/components/DonorBadge';
+import HospitalBadge from '@/components/HospitalBadge';
+import HospitalTransferModal from '@/components/HospitalTransferModal';
+import { getHospital } from '@/lib/hospitals';
 import { format } from 'date-fns';
 
 const STATUS_FLOW = ['intake', 'storage', 'examination', 'holding', 'released'];
@@ -28,6 +31,8 @@ export default function DecedentDetail() {
   const [newLocation, setNewLocation] = useState('');
   const [moveNote, setMoveNote] = useState('');
   const [showLabel, setShowLabel] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transfers, setTransfers] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -35,11 +40,13 @@ export default function DecedentDetail() {
       base44.entities.CustodyLog.filter({ decedent_id: id }),
       base44.entities.PersonalEffect.filter({ decedent_id: id }),
       base44.entities.Examination.filter({ decedent_id: id }),
-    ]).then(([d, c, e, ex]) => {
+      base44.entities.HospitalTransfer.filter({ decedent_id: id }),
+    ]).then(([d, c, e, ex, tr]) => {
       setDecedent(d[0]);
       setCustodyLogs(c.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
       setEffects(e);
       setExaminations(ex);
+      setTransfers(tr.sort((a,b) => new Date(b.transfer_datetime) - new Date(a.transfer_datetime)));
       setLoading(false);
     });
   }, [id]);
@@ -73,6 +80,17 @@ export default function DecedentDetail() {
     setMovingStatus(false);
     setNewLocation('');
     setMoveNote('');
+  };
+
+  const handleTransferred = async () => {
+    const [d, c, tr] = await Promise.all([
+      base44.entities.Decedent.filter({ id }),
+      base44.entities.CustodyLog.filter({ decedent_id: id }),
+      base44.entities.HospitalTransfer.filter({ decedent_id: id }),
+    ]);
+    setDecedent(d[0]);
+    setCustodyLogs(c.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    setTransfers(tr.sort((a,b) => new Date(b.transfer_datetime) - new Date(a.transfer_datetime)));
   };
 
   if (loading) return (
@@ -113,9 +131,13 @@ export default function DecedentDetail() {
             <StatusBadge status={decedent.status} />
             <StatusBadge status={decedent.identification_status} />
             <DonorBadge decedent={decedent} />
+            <HospitalBadge hospitalId={decedent.hospital_location} size="sm" />
           </div>
           <h1 className="text-xl font-semibold">{name}</h1>
         </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowTransfer(true)}>
+          <ArrowLeftRight className="w-3.5 h-3.5" /> Transfer
+        </Button>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowLabel(true)}>
           <QrCode className="w-3.5 h-3.5" /> Label
         </Button>
@@ -142,6 +164,8 @@ export default function DecedentDetail() {
                 ['Case #', decedent.case_number || '—'],
                 ['L.E. Case', decedent.law_enforcement_case || '—'],
                 ['Autopsy Required', decedent.requires_autopsy ? 'Yes' : 'No'],
+                ['Hospital Location', getHospital(decedent.hospital_location)?.short || '—'],
+                ['Originating Hospital', getHospital(decedent.originating_hospital)?.short || '—'],
                 ['Storage Location', decedent.storage_location_label || '—'],
                 ['Intake Officer', decedent.intake_officer || '—'],
               ].map(([label, value]) => (
@@ -272,6 +296,37 @@ export default function DecedentDetail() {
             </div>
           )}
 
+          {/* Transfer History */}
+          {transfers.length > 0 && (
+            <div className="bg-card border rounded-xl p-5">
+              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <ArrowLeftRight className="w-4 h-4" /> Inter-Hospital Transfer History
+              </h2>
+              <div className="space-y-3">
+                {transfers.map((t, i) => {
+                  const fromH = getHospital(t.from_hospital);
+                  const toH = getHospital(t.to_hospital);
+                  return (
+                    <div key={t.id || i} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: fromH?.color }} />
+                        <span className="text-xs font-medium">{fromH?.short}</span>
+                        <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: toH?.color }} />
+                        <span className="text-xs font-medium">{toH?.short}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground">{t.transfer_datetime ? format(new Date(t.transfer_datetime), 'MMM d, yyyy HH:mm') : ''}</p>
+                        <p className="text-[10px] text-muted-foreground/70">{t.transferred_by} · {t.reason}</p>
+                      </div>
+                      <StatusBadge status={t.status} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Examinations */}
           <div className="bg-card border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
@@ -322,6 +377,8 @@ export default function DecedentDetail() {
         </div>
 
         {showLabel && <LabelPrintModal decedent={decedent} onClose={() => setShowLabel(false)} />}
+
+        {showTransfer && <HospitalTransferModal decedent={decedent} onClose={() => setShowTransfer(false)} onTransferred={handleTransferred} />}
 
       {/* Chain of Custody Timeline */}
         <div className="bg-card border rounded-xl p-5 h-fit">
