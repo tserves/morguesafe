@@ -74,6 +74,11 @@
         "georgetown"
       ],
       "description": "Hospital where this custody event occurred"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this record is synthetic demo data"
     }
   },
   "required": [

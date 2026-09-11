@@ -9,6 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 import LocationSelector from '@/components/LocationSelector';
+import DemoEnvironmentBanner from '@/components/DemoEnvironmentBanner';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', color: 'text-blue-400' },
@@ -117,6 +118,8 @@ export default function Layout() {
             <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           </div>
         </header>
+
+        <DemoEnvironmentBanner />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">

@@ -82,6 +82,11 @@
         "georgetown"
       ],
       "description": "Hospital where these personal effects are stored"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this record is synthetic demo data"
     }
   },
   "required": [

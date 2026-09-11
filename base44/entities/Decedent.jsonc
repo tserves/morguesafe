@@ -271,6 +271,11 @@
     },
     "donation_notes": {
       "type": "string"
+    },
+    "is_demo_data": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this record is synthetic demo data"
     }
   },
   "required": [

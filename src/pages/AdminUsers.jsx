@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import HospitalBadge from '@/components/HospitalBadge';
 import { HOSPITAL_LIST } from '@/lib/hospitals';
+import DemoDataManagement from '@/components/DemoDataManagement';
 
 const ROLES = [
   {
@@ -546,6 +547,8 @@ export default function AdminUsers() {
       {deleteTarget && (
         <DeleteConfirmModal user={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={loadUsers} />
       )}
+
+      <DemoDataManagement />
     </div>
   );
 }
