@@ -219,7 +219,7 @@ function EditModal({ decedent, onSave, onClose }) {
   );
 }
 
-function StorageCell({ decedent, storageUnits }) {
+function StorageCell({ decedent, storageUnits, showHospital }) {
   if (!decedent.storage_location_id && !decedent.storage_location_label) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
@@ -229,15 +229,21 @@ function StorageCell({ decedent, storageUnits }) {
   }
 
   const unit = storageUnits.find(u => u.id === decedent.storage_location_id);
+  const unitHospital = unit?.hospital_location || decedent.hospital_location;
   return (
     <div>
       <p className="text-xs font-medium text-foreground flex items-center gap-1">
         <Warehouse className="w-3 h-3 text-cyan-500" />
         {decedent.storage_location_label}
       </p>
-      {unit?.unit_type && (
-        <p className="text-[10px] text-muted-foreground mt-0.5">{TYPE_LABELS[unit.unit_type] || unit.unit_type}</p>
-      )}
+      <div className="flex items-center gap-1.5 mt-0.5">
+        {unit?.unit_type && (
+          <p className="text-[10px] text-muted-foreground">{TYPE_LABELS[unit.unit_type] || unit.unit_type}</p>
+        )}
+        {showHospital && unitHospital && (
+          <HospitalBadge hospitalId={unitHospital} size="xs" showIcon={false} showCode />
+        )}
+      </div>
     </div>
   );
 }
@@ -270,9 +276,9 @@ export default function IntakeList() {
     setDecedents(prev => prev.map(d => d.id === id ? updated : d));
   };
 
-  const storageTypes = [...new Set(storageUnits.map(u => u.unit_type))];
-
   const fDecedents = filterByLocation(decedents, selectedLocation);
+  const fStorageUnits = filterByLocation(storageUnits, selectedLocation);
+  const storageTypes = [...new Set(fStorageUnits.map(u => u.unit_type))];
   const filtered = fDecedents.filter(d => {
     const name = `${d.first_name || ''} ${d.last_name || ''}`.toLowerCase();
     const matchSearch = !search ||
@@ -464,7 +470,7 @@ export default function IntakeList() {
                         <p className="capitalize text-muted-foreground/70">{d.source_type?.replace('_',' ')}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <StorageCell decedent={d} storageUnits={storageUnits} />
+                        <StorageCell decedent={d} storageUnits={storageUnits} showHospital={selectedLocation === 'all'} />
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">
                         {d.intake_officer || '—'}
