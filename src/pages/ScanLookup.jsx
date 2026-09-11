@@ -140,7 +140,7 @@ export default function ScanLookup() {
             <Input
               ref={inputRef}
               className="pl-9 font-mono"
-              placeholder="MS-2026-0001 or CAS-2026-0441"
+              placeholder="OTMH-2026-0001 or MDH-2026-0001"
               value={query}
               onChange={e => setQuery(e.target.value)}
               autoFocus

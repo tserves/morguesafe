@@ -43,6 +43,7 @@ export async function generateDemoData(base44, user) {
     return d.toISOString();
   };
   let caseCounter = 1000;
+  const HOSPITAL_CODES = { oakville: 'OTMH', milton: 'MDH', georgetown: 'GH' };
   const genCaseNum = () => `MS-2026-${String(++caseCounter).padStart(4, '0')}`;
 
   // === Storage Units ===
@@ -77,6 +78,12 @@ export async function generateDemoData(base44, user) {
   );
   const unitByLabel = {};
   storageUnits.forEach(u => { unitByLabel[u.label] = u; });
+
+  // Replace MS prefix with hospital-specific code for all demo case IDs
+  decedentDefs.forEach(d => {
+    const code = HOSPITAL_CODES[d.hospitalLoc] || 'MS';
+    if (d.uid.startsWith('MS-')) d.uid = code + '-' + d.uid.slice(3);
+  });
 
   // === Decedents ===
   const decedentDefs = [

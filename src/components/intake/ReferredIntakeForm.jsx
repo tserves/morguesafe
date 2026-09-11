@@ -14,11 +14,13 @@ import DocumentUploadTab from './DocumentUploadTab';
 import AutofillReviewModal from './AutofillReviewModal';
 import DonationStep from '@/components/DonationStep';
 import HospitalField from './HospitalField';
+import { getHospital } from '@/lib/hospitals';
 
-function generateUniqueId() {
+function generateUniqueId(hospitalLocation = 'oakville') {
   const year = new Date().getFullYear();
   const rand = Math.floor(Math.random() * 9000) + 1000;
-  return `MS-${year}-${rand}`;
+  const code = getHospital(hospitalLocation)?.code || 'MS';
+  return `${code}-${year}-${rand}`;
 }
 
 const TABS = [
@@ -37,7 +39,7 @@ export default function ReferredIntakeForm({ onBack }) {
   const [scanResult, setScanResult] = useState(null);
   const [scanSummary, setScanSummary] = useState('');
   const [form, setForm] = useState({
-    unique_id: generateUniqueId(),
+    unique_id: generateUniqueId('oakville'),
     hospital_location: 'oakville',
     full_name: '',
     age: '',
@@ -211,7 +213,7 @@ export default function ReferredIntakeForm({ onBack }) {
       {tab === 'form' && (
         <div className="space-y-4">
           <div className="bg-card border rounded-xl p-5 space-y-4">
-            <HospitalField value={form.hospital_location} onChange={v => set('hospital_location', v)} />
+            <HospitalField value={form.hospital_location} onChange={v => setForm(f => ({ ...f, hospital_location: v, unique_id: generateUniqueId(v) }))} />
             <div>
               <Label>Full Name</Label>
               <Input className="mt-1.5" value={form.full_name} onChange={e => set('full_name', e.target.value)} placeholder="If known" />

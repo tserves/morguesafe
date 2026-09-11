@@ -20,7 +20,7 @@ export default function DecedentLabel({ decedent, printMode = false }) {
     hospital: decedent.hospital_location,
   });
 
-  // Barcode uses the unique_id string (e.g. MS-2026-0001 → strip non-alphanumeric for CODE128)
+  // Barcode uses the unique_id string (e.g. OTMH-2026-0001 → strip non-alphanumeric for CODE128)
   const barcodeValue = decedent.unique_id?.replace(/[^A-Z0-9-]/gi, '') || 'UNKNOWN';
 
   useEffect(() => {
