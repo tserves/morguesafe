@@ -79,12 +79,6 @@ export async function generateDemoData(base44, user) {
   const unitByLabel = {};
   storageUnits.forEach(u => { unitByLabel[u.label] = u; });
 
-  // Replace MS prefix with hospital-specific code for all demo case IDs
-  decedentDefs.forEach(d => {
-    const code = HOSPITAL_CODES[d.hospitalLoc] || 'MS';
-    if (d.uid.startsWith('MS-')) d.uid = code + '-' + d.uid.slice(3);
-  });
-
   // === Decedents ===
   const decedentDefs = [
     { uid: genCaseNum(), firstName: 'John', lastName: 'Mitchell', gender: 'male', age: 67, dob: '1959-03-15', status: 'intake', identStatus: 'identified', sourceType: 'hospital', sourceName: 'Oakville Trafalgar Memorial Hospital', floor: 'ICU - 4th Floor', arrival: dt(0, 8, 30), condition: 'intact', hospitalLoc: 'oakville', origHospital: 'oakville', isDonor: 'no', requiresAutopsy: false, nokName: 'Mary Mitchell', nokContact: '905-555-0142', nokRel: 'Spouse', intakeOfficer: 'Sarah Johnson', documentationComplete: false, personalEffectsLogged: false, storageLabel: null },
@@ -106,6 +100,12 @@ export async function generateDemoData(base44, user) {
     { uid: genCaseNum(), firstName: 'Dorothy', lastName: 'Lewis', gender: 'female', age: 79, dob: '1947-02-14', status: 'storage', identStatus: 'identified', sourceType: 'hospital', sourceName: 'Georgetown Hospital', floor: 'General Ward', arrival: dt(2, 12, 0), condition: 'intact', hospitalLoc: 'georgetown', origHospital: 'georgetown', isDonor: 'yes', donorRegNum: 'OD-2023-45621', donorCardVerified: 'yes', donorVerMethod: 'Provincial Donor Registry', donationOrg: 'Trillium Gift of Life Network', donationCoordName: 'Mark Stevens', donationCoordContact: '416-555-0200', tissuesForDonation: ['corneas', 'skin', 'bone'], donationStatus: 'recovery_completed', recoveryDatetime: dt(1, 10, 0), recoveryFacility: 'Trillium Recovery Centre', nokName: 'Helen Lewis', nokContact: '905-555-1590', nokRel: 'Daughter', intakeOfficer: 'David Brown', documentationComplete: true, personalEffectsLogged: true, causeOfDeath: 'Stroke', mannerOfDeath: 'natural', storageLabel: 'Room D - Rack 1 - Tray 2', flags: ['tissue_donor'] },
     { uid: genCaseNum(), firstName: 'Kevin', lastName: 'Taylor', gender: 'male', age: 35, dob: '1991-06-08', status: 'intake', identStatus: 'identified', sourceType: 'hospital', sourceName: 'Georgetown Hospital', floor: 'ICU', arrival: dt(0, 7, 45), condition: 'intact', hospitalLoc: 'georgetown', origHospital: 'georgetown', isDonor: 'no', requiresAutopsy: false, nokName: 'Amy Taylor', nokContact: '905-555-1623', nokRel: 'Wife', intakeOfficer: 'David Brown', documentationComplete: false, personalEffectsLogged: false, storageLabel: null },
   ];
+
+  // Replace MS prefix with hospital-specific code for all demo case IDs
+  decedentDefs.forEach(d => {
+    const code = HOSPITAL_CODES[d.hospitalLoc] || 'MS';
+    if (d.uid.startsWith('MS-')) d.uid = code + '-' + d.uid.slice(3);
+  });
 
   const decedents = await base44.entities.Decedent.bulkCreate(
     decedentDefs.map(d => ({
